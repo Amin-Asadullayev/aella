@@ -5,6 +5,7 @@ import { faPaperPlane, faXmark, faCheck, faCheckDouble } from '@fortawesome/free
 import { useAuth } from '@/lib/AuthContext'
 import { unlockPrivateKey } from '@/lib/cryptoSession'
 import { decryptMessage } from '@/lib/cryptoUtils'
+import { motion, AnimatePresence } from "framer-motion"
 import {
   connect,
   onEvent,
@@ -70,6 +71,20 @@ export default function Chat() {
       document.removeEventListener('keydown', handleKeyDown);
     }
   }, []);
+
+  useEffect(() => {
+  if (!showError) return;
+
+  function handleKeyDown(e) {
+    if (e.key === "Enter" || e.key === "Escape") setShowError(null);
+  }
+
+  window.addEventListener("keydown", handleKeyDown);
+
+  return () => {
+    window.removeEventListener("keydown", handleKeyDown);
+  };
+}, [showError]);
 
   function updateSidebar(msg) {
     setConversations(prev => {
@@ -425,61 +440,103 @@ export default function Chat() {
       {!activeConvo && <div className="flex-1 flex flex-col bg-gray-200 justify-center items-center">
         <p className="text-lg">Start a conversation.</p>
       </div>}
-      {showNewChat && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm">
-          <div className="bg-white/60 p-6 rounded-2xl w-[375px] shadow-xl">
-            <div className="flex justify-between items-center">
-              <h1 className="font-semibold text-xl mb-1">Find someone to chat</h1>
-              <FontAwesomeIcon className="text-lg" icon={faXmark} onClick={() => {
-                setShowNewChat(false);
-                setNewChatInput("");
-              }} />
-            </div>
-            <p className="text-sm mb-5 text-c1/80 font-medium">Start a new conversation</p>
+      <AnimatePresence>
+        {showNewChat && (
+          <motion.div className="fixed inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}>
+            <motion.div className="bg-white/60 p-6 rounded-2xl w-[375px] shadow-xl" initial={{ scale: 0.85, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.9, y: 10, opacity: 0 }}
+              transition={{
+                duration: 0.18,
+                ease: "easeOut",
+              }}>
+              <div className="flex justify-between items-center">
+                <h1 className="font-semibold text-xl mb-1">Find someone to chat</h1>
+                <FontAwesomeIcon className="text-lg" icon={faXmark} onClick={() => {
+                  setShowNewChat(false);
+                  setNewChatInput("");
+                }} />
+              </div>
+              <p className="text-sm mb-5 text-c1/80 font-medium">Start a new conversation</p>
 
-            <label htmlFor="username" className="text-sm font-medium mb-1.5 block">
-              Username
-            </label>
-            <input
-              autoFocus={true}
-              onKeyUp={(e) => {
-                if (e.key == "Enter") {
-                  newConvo()
-                }
+              <label htmlFor="username" className="text-sm font-medium mb-1.5 block">
+                Username
+              </label>
+              <input
+                autoFocus={true}
+                onKeyUp={(e) => {
+                  if (e.key == "Enter") {
+                    newConvo()
+                  }
+                }}
+                id="username"
+                value={newChatInput}
+                onChange={(e) => setNewChatInput(e.target.value)}
+                placeholder="Enter a username..."
+                className="w-full border border-c1 bg-c1/5 px-3 py-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-c1/20 placeholder-c1/80 transition"
+              />
+              <button
+                className="mt-4 w-full bg-c1 text-c2 font-semibold py-3 rounded-lg text-sm hover:opacity-90 active:scale-95 transition duration-500 disabled:opacity-85 disabled:active:scale-100" disabled={!newChatInput.trim()}
+                onClick={newConvo}
+              >
+                Start Chatting
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showError != null && (
+          <motion.div
+            className="fixed inset-0 bg-black/40 flex items-center justify-center backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowError(null)}
+          >
+            <motion.div
+              className="bg-white/60 p-3 w-[375px] rounded-2xl shadow-2xl overflow-hidden"
+              initial={{ scale: 0.85, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.9, y: 10, opacity: 0 }}
+              transition={{
+                duration: 0.18,
+                ease: "easeOut",
               }}
-              id="username"
-              value={newChatInput}
-              onChange={(e) => setNewChatInput(e.target.value)}
-              placeholder="Enter a username..."
-              className="w-full border border-c1 bg-c1/5 px-3 py-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-c1/20 placeholder-c1/80 transition"
-            />
-            <button
-              className="mt-4 w-full bg-c1 text-c2 font-semibold py-3 rounded-lg text-sm hover:opacity-90 active:scale-95 transition duration-500 disabled:opacity-85 disabled:active:scale-100" disabled={!newChatInput.trim()}
-              onClick={newConvo}
+              onClick={(e) => e.stopPropagation()}
             >
-              Start Chatting
-            </button>
-          </div>
-        </div>
-      )}
-      {showError != null && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm">
-          <div className="bg-white/60 p-6 rounded-2xl w-[375px] shadow-xl">
+              <div className="p-6 flex flex-col items-center text-center">
 
+                <div className="w-12 h-12 rounded-full bg-c1/10 flex items-center justify-center mb-3">
+                  <FontAwesomeIcon
+                    icon={faXmark}
+                    className="text-c2 text-lg"
+                  />
+                </div>
 
-            <p className="text-sm mt-3 mb-5 text-c3 font-medium">
-              {showError}
-            </p>
+                <h2 className="text-[#1C2321] font-semibold text-lg">
+                  Something went wrong
+                </h2>
 
-            <button
-              className="w-full bg-c3 text-white font-semibold py-3 rounded-lg text-sm hover:opacity-90 active:scale-95 transition duration-500"
-              onClick={() => setShowError(null)}
-            >
-              Dismiss
-            </button>
-          </div>
-        </div>
-      )}
+                <p className="text-sm text-[#1C2321]/70 mt-2 mb-5 leading-relaxed">
+                  {showError}
+                </p>
+
+                <button
+                  onClick={() => setShowError(null)}
+                  className="w-full bg-[#7D98A1] text-[#1C2321] font-semibold py-2.5 rounded-xl
+                       hover:opacity-90 active:scale-95 transition"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
