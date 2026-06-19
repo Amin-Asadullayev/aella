@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/AuthContext'
 import { unlockPrivateKey } from '@/lib/cryptoSession'
 import { decryptMessage } from '@/lib/cryptoUtils'
 import { motion, AnimatePresence } from "framer-motion"
+import SettingsModal from '@/components/settingsModal'
 import {
   connect,
   onEvent,
@@ -21,6 +22,15 @@ import {
 
 export default function Chat() {
   const { user, token, passphrase } = useAuth()
+  const [showSettings, setShowSettings] = useState(true)
+  const [displayName, setDisplayName] = useState("Tefma Alrex")
+  const [username, setUsername] = useState("tefma")
+  const [bio, setBio] = useState("Workin on a weekend like usual")
+  const [readReceipts, setReadReceipts] = useState(false)
+  const [onlineStatus, setOnlineStatus] = useState(false)
+  const [lastSeen, setLastSeen] = useState(false)
+  const [showTimestamps, setShowTimestamps] = useState(false)
+  const [darkMode, setDarkMode] = useState(false)
   const [conversations, setConversations] = useState([])
   const [activeConvo, setActiveConvo] = useState(null)
   const [messages, setMessages] = useState([])
@@ -540,6 +550,23 @@ export default function Chat() {
           </motion.div>
         )}
       </AnimatePresence>
+      <SettingsModal
+  open={showSettings}
+  onClose={() => setShowSettings(false)}
+  displayName={displayName}
+  username={username}
+  bio={bio}
+  readReceipts={readReceipts}
+  setReadReceipts={setReadReceipts}
+  onlineStatus={onlineStatus}
+  setOnlineStatus={setOnlineStatus}
+  lastSeen={lastSeen}
+  setLastSeen={setLastSeen}
+  showTimestamps={showTimestamps}
+  setShowTimestamps={setShowTimestamps}
+  darkMode={darkMode}
+  setDarkMode={setDarkMode}
+/>
     </div>
   )
 }
