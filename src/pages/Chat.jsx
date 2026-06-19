@@ -22,7 +22,7 @@ import {
 
 export default function Chat() {
   const { user, token, passphrase } = useAuth()
-  const [showSettings, setShowSettings] = useState(true)
+  const [showSettings, setShowSettings] = useState(false)
   const [displayName, setDisplayName] = useState("Tefma Alrex")
   const [username, setUsername] = useState("tefma")
   const [bio, setBio] = useState("Workin on a weekend like usual")
@@ -74,7 +74,7 @@ export default function Chat() {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'o') {
         e.preventDefault();
         setShowNewChat(true);
-      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() == 'k'){
+      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() == 'k') {
         e.preventDefault()
         setShowSettings(true)
       }
@@ -161,7 +161,7 @@ export default function Chat() {
       }
       case "receive_message": {
         getConversations();
-        await handleIncomingMessage(data.data);
+        if (data.data.senderId != data.data.receiverId)await handleIncomingMessage(data.data);
         break
       }
       case "conversation_created": {
@@ -553,25 +553,25 @@ export default function Chat() {
         )}
       </AnimatePresence>
       <SettingsModal
-  open={showSettings}
-  onClose={() => setShowSettings(false)}
-  displayName={displayName}
-  username={username}
-  bio={bio}
-  setUsername={setUsername}
-  setDisplayName={setDisplayName}
-  setBio = {setBio}
-  readReceipts={readReceipts}
-  setReadReceipts={setReadReceipts}
-  onlineStatus={onlineStatus}
-  setOnlineStatus={setOnlineStatus}
-  lastSeen={lastSeen}
-  setLastSeen={setLastSeen}
-  showTimestamps={showTimestamps}
-  setShowTimestamps={setShowTimestamps}
-  darkMode={darkMode}
-  setDarkMode={setDarkMode}
-/>
+        open={showSettings}
+        onClose={() => setShowSettings(false)}
+        displayName={displayName}
+        username={username}
+        bio={bio}
+        setUsername={setUsername}
+        setDisplayName={setDisplayName}
+        setBio={setBio}
+        readReceipts={readReceipts}
+        setReadReceipts={setReadReceipts}
+        onlineStatus={onlineStatus}
+        setOnlineStatus={setOnlineStatus}
+        lastSeen={lastSeen}
+        setLastSeen={setLastSeen}
+        showTimestamps={showTimestamps}
+        setShowTimestamps={setShowTimestamps}
+        darkMode={darkMode}
+        setDarkMode={setDarkMode}
+      />
     </div>
   )
 }
