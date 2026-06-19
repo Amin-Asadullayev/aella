@@ -75,6 +75,9 @@ export default function Chat() {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'o') {
         e.preventDefault();
         setShowNewChat(true);
+      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() == 'k'){
+        e.preventDefault()
+        setShowSettings(true)
       }
     }
     document.addEventListener('keydown', handleKeyDown);

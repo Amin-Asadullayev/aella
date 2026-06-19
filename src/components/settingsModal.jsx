@@ -1,14 +1,20 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faXmark, faPenToSquare } from "@fortawesome/free-solid-svg-icons";
+import ProfilePhoto from "@/assets/profile.png"
 
 export default function SettingsModal({
     open,
     onClose,
     displayName,
+    setDisplayName,
     username,
+    setUsername,
     bio,
+    setBio,
+    avatar,
+    setAvatar,
     readReceipts,
     setReadReceipts,
     onlineStatus,
@@ -21,7 +27,6 @@ export default function SettingsModal({
     setDarkMode,
 }) {
     const [tab, setTab] = useState("profile");
-
     const [editField, setEditField] = useState(null);
     const [tempValue, setTempValue] = useState("");
 
@@ -39,6 +44,15 @@ export default function SettingsModal({
     }
 
     function closeEdit() {
+        setEditField(null);
+        setTempValue("");
+    }
+
+    function handleAvatarChange(e) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const url = URL.createObjectURL(file);
+        setAvatar(url);
         setEditField(null);
     }
 
@@ -63,9 +77,7 @@ export default function SettingsModal({
                                 <button
                                     key={t.id}
                                     onClick={() => setTab(t.id)}
-                                    className={`text-sm px-3 py-2 rounded-lg text-left transition ${tab === t.id
-                                        ? "bg-c1 text-white"
-                                        : "hover:bg-c1/10 text-c1"
+                                    className={`text-sm px-3 py-2 rounded-lg text-left transition ${tab === t.id ? "bg-c1 text-white" : "hover:bg-c1/10 text-c1"
                                         }`}
                                 >
                                     {t.label}
@@ -73,78 +85,99 @@ export default function SettingsModal({
                             ))}
                         </div>
 
-                        <div className="flex-1 p-6 overflow-y-auto">
-                            <div className="flex justify-between items-center mb-2">
-                                <h1 className="font-semibold text-xl">Settings</h1>
-                                <FontAwesomeIcon
-                                    icon={faXmark}
-                                    className="cursor-pointer"
-                                    onClick={onClose}
-                                />
-                            </div>
+                        <div className="flex flex-col flex-1 p-6 overflow-y-auto">
+                            <div>
+                                <div className="flex justify-between items-center mb-2">
+                                    <h1 className="font-semibold text-xl">Settings</h1>
+                                    <FontAwesomeIcon icon={faXmark} onClick={onClose} className="cursor-pointer" />
+                                </div>
 
-                            <p className="text-sm mb-6 text-c1/80">
-                                Manage your account and preferences
-                            </p>
+                                <p className="text-sm mb-6 text-c1/80">
+                                    Manage your account and preferences
+                                </p>
+                            </div>
 
                             <AnimatePresence mode="wait">
                                 {tab === "profile" && (
-                                    <TabPanel key="profile">
-                                        <Section title="Profile">
-                                            <ActionRow
-                                                label="Display Name"
-                                                value={displayName}
-                                                onEdit={() => openEdit("displayName", displayName)}
-                                            />
-                                            <ActionRow
-                                                label="Username"
-                                                value={username}
-                                                onEdit={() => openEdit("username", username)}
-                                            />
-                                            <ActionRow
-                                                label="Bio"
-                                                value={bio}
-                                                onEdit={() => openEdit("bio", bio)}
-                                            />
-                                        </Section>
-                                    </TabPanel>
+                                    <motion.div
+                                        key="profile"
+                                        initial={{ opacity: 0, x: 10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -10 }}
+                                        className="flex-1 flex"
+                                    >
+                                        <div className="flex flex-col overflow-y-auto items-center justify-center flex-1 gap-2">
+                                            <div className="relative group mb-3">
+                                                <img
+                                                    src={ProfilePhoto}
+                                                    onClick={() => openEdit("avatar", avatar)}
+                                                    className="w-[140px] h-[140px] rounded-full object-cover ring-2 ring-offset-2 ring-c1/20 cursor-pointer transition group-hover:brightness-75"
+                                                />
+                                                <button
+                                                    onClick={() => openEdit("avatar", avatar)}
+                                                    className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                                                >
+                                                    <FontAwesomeIcon icon={faPenToSquare} className="w-7 h-7 text-white" />
+                                                </button>
+                                            </div>
+
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-2xl text-c1 font-bold leading-tight">{displayName || "—"}</span>
+                                                <button onClick={() => openEdit("displayName", displayName)} className="text-c1/50 hover:text-c1 transition">
+                                                    <FontAwesomeIcon icon={faPenToSquare} className="w-5 h-5" />
+                                                </button>
+                                            </div>
+
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-base text-c1/80">@{username || "—"}</span>
+                                                <button onClick={() => openEdit("username", username)} className="text-c1/50 hover:text-c1 transition">
+                                                    <FontAwesomeIcon icon={faPenToSquare} className="w-4 h-4" />
+                                                </button>
+                                            </div>
+
+                                            <div className="flex items-center gap-2 mt-1 px-5 py-3 bg-c1/5 rounded-xl max-w-[300px]">
+                                                <span className="text-sm text-c1/60 text-center leading-relaxed flex-1">{bio || "No bio yet"}</span>
+                                                <button onClick={() => openEdit("bio", bio)} className="text-c1/50 hover:text-c1 transition shrink-0">
+                                                    <FontAwesomeIcon icon={faPenToSquare} className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </motion.div>
                                 )}
 
                                 {tab === "privacy" && (
-                                    <TabPanel key="privacy">
-                                        <Section title="Privacy">
+                                    <motion.div
+                                        key="privacy"
+                                        initial={{ opacity: 0, x: 10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -10 }}
+                                    >
+                                        <div className="space-y-2">
                                             <ToggleRow label="Read Receipts" value={readReceipts} onChange={setReadReceipts} />
                                             <ToggleRow label="Online Status" value={onlineStatus} onChange={setOnlineStatus} />
                                             <ToggleRow label="Last Seen" value={lastSeen} onChange={setLastSeen} />
-                                        </Section>
-                                    </TabPanel>
+                                        </div>
+                                    </motion.div>
                                 )}
 
                                 {tab === "chat" && (
-                                    <TabPanel key="chat">
-                                        <Section title="Chat">
-                                            <ToggleRow label="Show Timestamps" value={showTimestamps} onChange={setShowTimestamps} />
-                                        </Section>
-                                    </TabPanel>
+                                    <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                                        <ToggleRow label="Show Timestamps" value={showTimestamps} onChange={setShowTimestamps} />
+                                    </motion.div>
                                 )}
 
                                 {tab === "appearance" && (
-                                    <TabPanel key="appearance">
-                                        <Section title="Appearance">
-                                            <ToggleRow label="Dark Mode" value={darkMode} onChange={setDarkMode} />
-                                            <ActionRow label="Accent Color" />
-                                        </Section>
-                                    </TabPanel>
+                                    <motion.div key="appearance" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                                        <ToggleRow label="Dark Mode" value={darkMode} onChange={setDarkMode} />
+                                    </motion.div>
                                 )}
 
                                 {tab === "account" && (
-                                    <TabPanel key="account">
-                                        <Section title="Account">
-                                            <button className="w-full mt-2 bg-red-500 text-white font-semibold py-2.5 rounded-lg text-sm hover:opacity-90">
-                                                Delete Account
-                                            </button>
-                                        </Section>
-                                    </TabPanel>
+                                    <motion.div key="account" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                                        <button className="w-full bg-red-500 text-white py-2.5 rounded-lg text-sm">
+                                            Delete Account
+                                        </button>
+                                    </motion.div>
                                 )}
                             </AnimatePresence>
                         </div>
@@ -158,7 +191,7 @@ export default function SettingsModal({
                                     exit={{ opacity: 0 }}
                                 >
                                     <motion.div
-                                        className="bg-white/80 p-4 rounded-xl w-[300px]"
+                                        className="bg-white/85 p-4 rounded-xl w-[350px]"
                                         initial={{ scale: 0.9, opacity: 0 }}
                                         animate={{ scale: 1, opacity: 1 }}
                                         exit={{ scale: 0.9, opacity: 0 }}
@@ -227,44 +260,6 @@ export default function SettingsModal({
     );
 }
 
-function TabPanel({ children }) {
-    return (
-        <motion.div
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -10 }}
-        >
-            {children}
-        </motion.div>
-    );
-}
-
-function Section({ title, children }) {
-    return (
-        <div className="mb-6">
-            <h2 className="text-xs font-bold text-c1/70 uppercase mb-3">{title}</h2>
-            <div className="space-y-2">{children}</div>
-        </div>
-    );
-}
-
-function ActionRow({ label, value, onEdit }) {
-    return (
-        <div className="flex items-center justify-between bg-c1/5 border border-c1/10 px-3 py-2 rounded-lg">
-            <span className="text-sm text-c1">{label}</span>
-
-            <div className="flex items-center gap-3">
-                <span className="text-xs text-c1/60">{value || "—"}</span>
-                <button
-                    onClick={onEdit}
-                    className="text-xs font-semibold text-c1 bg-c1/10 px-3 py-1 rounded-md hover:opacity-80"
-                >
-                    Edit
-                </button>
-            </div>
-        </div>
-    );
-}
 
 function ToggleRow({ label, value, onChange }) {
     return (
@@ -273,7 +268,7 @@ function ToggleRow({ label, value, onChange }) {
             <input
                 type="checkbox"
                 checked={value}
-                className="focus:outline-none focus:ring-0 focus:ring-offset-0 bg-c1/30 border-c1/30 text-c1 rounded checked:bg-c1 transition duration-300"
+                className="focus:outline-none focus:ring-0 focus:ring-offset-0 bg-c1/0 border-c1/30 text-c1 rounded checked:bg-c1 transition duration-300"
                 onChange={(e) => onChange(e.target.checked)}
             />
         </div>
