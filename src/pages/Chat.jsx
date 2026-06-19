@@ -40,7 +40,6 @@ export default function Chat() {
   const [showNewChat, setShowNewChat] = useState(false);
   const [newChatInput, setNewChatInput] = useState("");
   const [showError, setShowError] = useState(null)
-
   const bottomRef = useRef(null)
 
   useEffect(() => {
@@ -559,6 +558,9 @@ export default function Chat() {
   displayName={displayName}
   username={username}
   bio={bio}
+  setUsername={setUsername}
+  setDisplayName={setDisplayName}
+  setBio = {setBio}
   readReceipts={readReceipts}
   setReadReceipts={setReadReceipts}
   onlineStatus={onlineStatus}

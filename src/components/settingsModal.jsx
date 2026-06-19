@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faXmark, faPenToSquare } from "@fortawesome/free-solid-svg-icons";
+import { faXmark, faPenToSquare, faImages } from "@fortawesome/free-solid-svg-icons";
 import ProfilePhoto from "@/assets/profile.png"
 
 export default function SettingsModal({
@@ -48,6 +48,13 @@ export default function SettingsModal({
         setTempValue("");
     }
 
+    function handleSave() {
+        if (editField === "displayName") setDisplayName(tempValue);
+        else if (editField === "username") setUsername(tempValue);
+        else if (editField === "bio") setBio(tempValue);
+        closeEdit();
+    }
+
     function handleAvatarChange(e) {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -77,8 +84,7 @@ export default function SettingsModal({
                                 <button
                                     key={t.id}
                                     onClick={() => setTab(t.id)}
-                                    className={`text-sm px-3 py-2 rounded-lg text-left transition ${tab === t.id ? "bg-c1 text-white" : "hover:bg-c1/10 text-c1"
-                                        }`}
+                                    className={`text-sm px-3 py-2 rounded-lg text-left transition ${tab === t.id ? "bg-c1 text-white" : "hover:bg-c1/10 text-c1"}`}
                                 >
                                     {t.label}
                                 </button>
@@ -91,7 +97,6 @@ export default function SettingsModal({
                                     <h1 className="font-semibold text-xl">Settings</h1>
                                     <FontAwesomeIcon icon={faXmark} onClick={onClose} className="cursor-pointer" />
                                 </div>
-
                                 <p className="text-sm mb-6 text-c1/80">
                                     Manage your account and preferences
                                 </p>
@@ -109,7 +114,7 @@ export default function SettingsModal({
                                         <div className="flex flex-col overflow-y-auto items-center justify-center flex-1 gap-2">
                                             <div className="relative group mb-3">
                                                 <img
-                                                    src={ProfilePhoto}
+                                                    src={avatar || ProfilePhoto}
                                                     onClick={() => openEdit("avatar", avatar)}
                                                     className="w-[140px] h-[140px] rounded-full object-cover ring-2 ring-offset-2 ring-c1/20 cursor-pointer transition group-hover:brightness-75"
                                                 />
@@ -191,64 +196,73 @@ export default function SettingsModal({
                                     exit={{ opacity: 0 }}
                                 >
                                     <motion.div
-                                        className="bg-white/85 p-4 rounded-xl w-[350px]"
+                                        className="bg-white/85 p-5 rounded-xl w-[350px]"
                                         initial={{ scale: 0.9, opacity: 0 }}
                                         animate={{ scale: 1, opacity: 1 }}
                                         exit={{ scale: 0.9, opacity: 0 }}
                                     >
-                                        <h2 className="font-semibold mb-3 mt-0.5">Change your {
-                                            (() => {
-                                                switch (editField) {
-                                                    case "displayName":
-                                                        return "display name"
-                                                    case "username": return "username"
-                                                    case "bio": return "bio"
-                                                }
-                                            })()
-                                        }
-                                        </h2>
-
-                                        {editField === "bio" ? (
-                                            <div className="relative w-full">
-                                                <textarea
-                                                    autoFocus
-                                                    value={tempValue}
-                                                    onChange={(e) => setTempValue(e.target.value)}
-                                                    maxLength={70}
-                                                    placeholder="Your bio"
-                                                    className="w-full border border-c1 px-3.5 py-2.5 pr-3 pb-7 rounded-xl text-sm
-        text-foreground placeholder:text-muted-foreground/50
-        focus:outline-none focus:ring-0 focus:ring-offset-0
-        bg-transparent
-        focus:border-c1
-        resize-none min-h-[120px] leading-relaxed overflow-none"
-                                                />
-                                                <span className={`absolute bottom-2.5 right-3 text-[11px] pointer-events-none transition-colors
-                                                    ${tempValue.length >= 70 ? "text-red-400" : tempValue.length >= 60 ? "text-amber-400" : "text-muted-foreground/40"}`}>
-                                                    {tempValue.length} / 70
-                                                </span>
-                                            </div>
+                                        {editField === "avatar" ? (
+                                            <>
+                                                <h2 className="font-semibold mb-3 mt-0.5">Change your profile photo</h2>
+                                                <input id="uploadProfilePic" type="file" accept="image/*" style={{display: "none"}} onChange={handleAvatarChange} />
+                                                <div className="w-full gap-2.5 bg-c2/35 p-10 flex flex-col justify-center items-center rounded-lg" onClick={() => document.getElementById("uploadProfilePic").click()}>
+                                                    <FontAwesomeIcon icon={faImages} className="text-2xl" />
+                                                    Select or drop a file.
+                                                </div>
+                                                <div className="flex justify-end mt-3">
+                                                    <button onClick={closeEdit} className="text-sm px-3 py-2">
+                                                        Cancel
+                                                    </button>
+                                                    <button
+                                                        className="bg-c1 text-white text-sm px-4 py-2 rounded-lg"
+                                                        onClick={handleSave}
+                                                    >
+                                                        Upload
+                                                    </button>
+                                                </div>
+                                            </>
                                         ) : (
-                                            <input
-                                                autoFocus
-                                                value={tempValue}
-                                                onChange={(e) => setTempValue(e.target.value)}
-                                                className="w-full border border-c1 px-3.5 py-2.5 rounded-xl text-sm
-      bg-transparent text-foreground placeholder:text-muted-foreground/50
-      focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-c1"
-                                            />
+                                            <>
+                                                <h2 className="font-semibold mb-3 mt-0.5">
+                                                    Change your {editField === "displayName" ? "display name" : editField === "username" ? "username" : "bio"}
+                                                </h2>
+
+                                                {editField === "bio" ? (
+                                                    <div className="relative w-full">
+                                                        <textarea
+                                                            autoFocus
+                                                            value={tempValue}
+                                                            onChange={(e) => setTempValue(e.target.value)}
+                                                            maxLength={70}
+                                                            placeholder="Your bio"
+                                                            className="w-full border border-c1 px-3.5 py-2.5 pr-3 pb-7 rounded-xl text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-0 focus:ring-offset-0 bg-transparent focus:border-c1 resize-none min-h-[120px] leading-relaxed overflow-none"
+                                                        />
+                                                        <span className={`absolute bottom-2.5 right-3 text-[11px] pointer-events-none transition-colors ${tempValue.length >= 70 ? "text-red-400" : tempValue.length >= 60 ? "text-amber-400" : "text-muted-foreground/40"}`}>
+                                                            {tempValue.length} / 70
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <input
+                                                        autoFocus
+                                                        value={tempValue}
+                                                        onChange={(e) => setTempValue(e.target.value)}
+                                                        className="w-full border border-c1 px-3.5 py-2.5 rounded-xl text-sm bg-transparent text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-c1"
+                                                    />
+                                                )}
+
+                                                <div className="flex justify-end gap-2 mt-3">
+                                                    <button onClick={closeEdit} className="text-sm px-3 py-2">
+                                                        Cancel
+                                                    </button>
+                                                    <button
+                                                        className="bg-c1 text-white text-sm px-3 py-2 rounded-lg"
+                                                        onClick={handleSave}
+                                                    >
+                                                        Save
+                                                    </button>
+                                                </div>
+                                            </>
                                         )}
-                                        <div className="flex justify-end gap-2 mt-3">
-                                            <button onClick={closeEdit} className="text-sm px-3 py-2">
-                                                Cancel
-                                            </button>
-                                            <button
-                                                className="bg-c1 text-white text-sm px-3 py-2 rounded-lg"
-                                                onClick={closeEdit}
-                                            >
-                                                Save
-                                            </button>
-                                        </div>
                                     </motion.div>
                                 </motion.div>
                             )}
@@ -259,7 +273,6 @@ export default function SettingsModal({
         </AnimatePresence>
     );
 }
-
 
 function ToggleRow({ label, value, onChange }) {
     return (
