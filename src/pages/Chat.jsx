@@ -73,18 +73,18 @@ export default function Chat() {
   }, []);
 
   useEffect(() => {
-  if (!showError) return;
+    if (!showError) return;
 
-  function handleKeyDown(e) {
-    if (e.key === "Enter" || e.key === "Escape") setShowError(null);
-  }
+    function handleKeyDown(e) {
+      if (e.key === "Enter" || e.key === "Escape") setShowError(null);
+    }
 
-  window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
 
-  return () => {
-    window.removeEventListener("keydown", handleKeyDown);
-  };
-}, [showError]);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showError]);
 
   function updateSidebar(msg) {
     setConversations(prev => {
@@ -148,6 +148,17 @@ export default function Chat() {
       }
       case "receive_message": {
         getConversations();
+        const decrypted = await Promise.all(
+          [data.data].map(async (msg) => {
+            try {
+              const plaintext = await decryptMessage(msg.ciphertext);
+              return { ...msg, plaintext };
+            } catch {
+              return { ...msg, plaintext: null };
+            }
+          })
+        );
+        setMessages((prev) => [...prev, ...decrypted])
         break
       }
       case "conversation_created": {
