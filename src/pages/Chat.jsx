@@ -1,5 +1,5 @@
 import profile from '../assets/profile.png'
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, act } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPaperPlane, faXmark, faCheck, faCheckDouble } from '@fortawesome/free-solid-svg-icons'
 import { useAuth } from '@/lib/AuthContext'
@@ -15,6 +15,7 @@ import {
   markAsRead,
   createConversation,
   disconnect,
+  handleIncomingMessage,
   getConversation
 } from '@/lib/socketClient'
 
@@ -148,17 +149,7 @@ export default function Chat() {
       }
       case "receive_message": {
         getConversations();
-        const decrypted = await Promise.all(
-          [data.data].map(async (msg) => {
-            try {
-              const plaintext = await decryptMessage(msg.ciphertext);
-              return { ...msg, plaintext };
-            } catch {
-              return { ...msg, plaintext: null };
-            }
-          })
-        );
-        setMessages((prev) => [...prev, ...decrypted])
+        await handleIncomingMessage(data.data);
         break
       }
       case "conversation_created": {
@@ -182,6 +173,7 @@ export default function Chat() {
         break;
       }
       case "conversation_read": {
+        console.log("hellnah")
         const { conversationId } = data;
         console.log("received")
         setMessages(prev =>
@@ -203,6 +195,7 @@ export default function Chat() {
 
   useEffect(() => {
     function onIncoming(e) {
+      console.log("maak")
       const msg = e.detail;
       updateSidebar(msg);
       if (!activeConvo) return;
@@ -211,7 +204,6 @@ export default function Chat() {
         msg.senderId === activeConvo.otherUser.id
       ) {
         setMessages(prev => [...prev, msg]);
-
         console.log(activeConvo.conversationId)
         markAsRead(activeConvo.conversationId);
       }
