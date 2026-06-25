@@ -1,36 +1,41 @@
-import { useState } from "react";
+import { useState, ChangeEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark, faPenToSquare, faImages } from "@fortawesome/free-solid-svg-icons";
-import ProfilePhoto from "@/assets/profile.png"
+import ProfilePhoto from "@/assets/profile.png";
+import { EditField, TabId } from "@/types/api";
 
-export default function SettingsModal({
-    open,
-    onClose,
-    displayName,
-    setDisplayName,
-    username,
-    setUsername,
-    bio,
-    setBio,
-    avatar,
-    setAvatar,
-    readReceipts,
-    setReadReceipts,
-    onlineStatus,
-    setOnlineStatus,
-    lastSeen,
-    setLastSeen,
-    showTimestamps,
-    setShowTimestamps,
-    darkMode,
-    setDarkMode,
-}) {
-    const [tab, setTab] = useState("profile");
-    const [editField, setEditField] = useState(null);
+type Settings = {
+    displayName: string;
+    username: string;
+    bio: string;
+    avatar: string;
+    privacy: {
+        readReceipts: boolean;
+        onlineStatus: boolean;
+        lastSeen: boolean;
+    };
+    chat: {
+        showTimestamps: boolean;
+    };
+    appearance: {
+        darkMode: boolean;
+    };
+};
+
+type Props = {
+    open: boolean;
+    onClose: () => void;
+    settings: Settings;
+    setSettings: React.Dispatch<React.SetStateAction<Settings>>;
+};
+
+export default function SettingsModal({ open, onClose, settings, setSettings }: Props) {
+    const [tab, setTab] = useState<TabId>("profile");
+    const [editField, setEditField] = useState<EditField>(null);
     const [tempValue, setTempValue] = useState("");
 
-    const tabs = [
+    const tabs: { id: TabId; label: string }[] = [
         { id: "profile", label: "Profile" },
         { id: "privacy", label: "Privacy" },
         { id: "chat", label: "Chat" },
@@ -38,7 +43,7 @@ export default function SettingsModal({
         { id: "account", label: "Account" },
     ];
 
-    function openEdit(field, value) {
+    function openEdit(field: EditField, value?: string) {
         setEditField(field);
         setTempValue(value || "");
     }
@@ -49,17 +54,21 @@ export default function SettingsModal({
     }
 
     function handleSave() {
-        if (editField === "displayName") setDisplayName(tempValue);
-        else if (editField === "username") setUsername(tempValue);
-        else if (editField === "bio") setBio(tempValue);
+        if (editField === "displayName") {
+            setSettings(prev => ({ ...prev, displayName: tempValue }));
+        } else if (editField === "username") {
+            setSettings(prev => ({ ...prev, username: tempValue }));
+        } else if (editField === "bio") {
+            setSettings(prev => ({ ...prev, bio: tempValue }));
+        }
         closeEdit();
     }
 
-    function handleAvatarChange(e) {
+    function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
         if (!file) return;
         const url = URL.createObjectURL(file);
-        setAvatar(url);
+        setSettings(prev => ({ ...prev, avatar: url }));
         setEditField(null);
     }
 
@@ -114,12 +123,12 @@ export default function SettingsModal({
                                         <div className="flex flex-col overflow-y-auto items-center justify-center flex-1 gap-2">
                                             <div className="relative group mb-3">
                                                 <img
-                                                    src={avatar || ProfilePhoto}
-                                                    onClick={() => openEdit("avatar", avatar)}
+                                                    src={settings.avatar || ProfilePhoto}
+                                                    onClick={() => openEdit("avatar", settings.avatar)}
                                                     className="w-[140px] h-[140px] rounded-full object-cover ring-2 ring-offset-2 ring-c1/20 cursor-pointer transition group-hover:brightness-75"
                                                 />
                                                 <button
-                                                    onClick={() => openEdit("avatar", avatar)}
+                                                    onClick={() => openEdit("avatar", settings.avatar)}
                                                     className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
                                                 >
                                                     <FontAwesomeIcon icon={faPenToSquare} className="w-7 h-7 text-white" />
@@ -127,22 +136,22 @@ export default function SettingsModal({
                                             </div>
 
                                             <div className="flex items-center gap-2">
-                                                <span className="text-2xl text-c1 font-bold leading-tight">{displayName || "—"}</span>
-                                                <button onClick={() => openEdit("displayName", displayName)} className="text-c1/50 hover:text-c1 transition">
+                                                <span className="text-2xl text-c1 font-bold leading-tight">{settings.displayName || "—"}</span>
+                                                <button onClick={() => openEdit("displayName", settings.displayName)} className="text-c1/50 hover:text-c1 transition">
                                                     <FontAwesomeIcon icon={faPenToSquare} className="w-5 h-5" />
                                                 </button>
                                             </div>
 
                                             <div className="flex items-center gap-2">
-                                                <span className="text-base text-c1/80">@{username || "—"}</span>
-                                                <button onClick={() => openEdit("username", username)} className="text-c1/50 hover:text-c1 transition">
+                                                <span className="text-base text-c1/80">@{settings.username || "—"}</span>
+                                                <button onClick={() => openEdit("username", settings.username)} className="text-c1/50 hover:text-c1 transition">
                                                     <FontAwesomeIcon icon={faPenToSquare} className="w-4 h-4" />
                                                 </button>
                                             </div>
 
                                             <div className="flex items-center gap-2 mt-1 px-5 py-3 bg-c1/5 rounded-xl max-w-[300px]">
-                                                <span className="text-sm text-c1/60 text-center leading-relaxed flex-1">{bio || "No bio yet"}</span>
-                                                <button onClick={() => openEdit("bio", bio)} className="text-c1/50 hover:text-c1 transition shrink-0">
+                                                <span className="text-sm text-c1/60 text-center leading-relaxed flex-1">{settings.bio || "No bio yet"}</span>
+                                                <button onClick={() => openEdit("bio", settings.bio)} className="text-c1/50 hover:text-c1 transition shrink-0">
                                                     <FontAwesomeIcon icon={faPenToSquare} className="w-4 h-4" />
                                                 </button>
                                             </div>
@@ -158,22 +167,67 @@ export default function SettingsModal({
                                         exit={{ opacity: 0, x: -10 }}
                                     >
                                         <div className="space-y-2">
-                                            <ToggleRow label="Read Receipts" value={readReceipts} onChange={setReadReceipts} />
-                                            <ToggleRow label="Online Status" value={onlineStatus} onChange={setOnlineStatus} />
-                                            <ToggleRow label="Last Seen" value={lastSeen} onChange={setLastSeen} />
+                                            <ToggleRow
+                                                label="Read Receipts"
+                                                value={settings.privacy.readReceipts}
+                                                onChange={(value) =>
+                                                    setSettings(prev => ({
+                                                        ...prev,
+                                                        privacy: { ...prev.privacy, readReceipts: value },
+                                                    }))
+                                                }
+                                            />
+                                            <ToggleRow
+                                                label="Online Status"
+                                                value={settings.privacy.onlineStatus}
+                                                onChange={(value) =>
+                                                    setSettings(prev => ({
+                                                        ...prev,
+                                                        privacy: { ...prev.privacy, onlineStatus: value },
+                                                    }))
+                                                }
+                                            />
+                                            <ToggleRow
+                                                label="Last Seen"
+                                                value={settings.privacy.lastSeen}
+                                                onChange={(value) =>
+                                                    setSettings(prev => ({
+                                                        ...prev,
+                                                        privacy: { ...prev.privacy, lastSeen: value },
+                                                    }))
+                                                }
+                                            />
                                         </div>
                                     </motion.div>
                                 )}
 
                                 {tab === "chat" && (
                                     <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                                        <ToggleRow label="Show Timestamps" value={showTimestamps} onChange={setShowTimestamps} />
+                                        <ToggleRow
+                                            label="Show Timestamps"
+                                            value={settings.chat.showTimestamps}
+                                            onChange={(value) =>
+                                                setSettings(prev => ({
+                                                    ...prev,
+                                                    chat: { ...prev.chat, showTimestamps: value },
+                                                }))
+                                            }
+                                        />
                                     </motion.div>
                                 )}
 
                                 {tab === "appearance" && (
                                     <motion.div key="appearance" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                                        <ToggleRow label="Dark Mode" value={darkMode} onChange={setDarkMode} />
+                                        <ToggleRow
+                                            label="Dark Mode"
+                                            value={settings.appearance.darkMode}
+                                            onChange={(value) =>
+                                                setSettings(prev => ({
+                                                    ...prev,
+                                                    appearance: { ...prev.appearance, darkMode: value },
+                                                }))
+                                            }
+                                        />
                                     </motion.div>
                                 )}
 
@@ -204,8 +258,11 @@ export default function SettingsModal({
                                         {editField === "avatar" ? (
                                             <>
                                                 <h2 className="font-semibold mb-3 mt-0.5">Change your profile photo</h2>
-                                                <input id="uploadProfilePic" type="file" accept="image/*" style={{display: "none"}} onChange={handleAvatarChange} />
-                                                <div className="w-full gap-2.5 bg-c2/35 p-10 flex flex-col justify-center items-center rounded-lg" onClick={() => document.getElementById("uploadProfilePic").click()}>
+                                                <input id="uploadProfilePic" type="file" accept="image/*" style={{ display: "none" }} onChange={handleAvatarChange} />
+                                                <div
+                                                    className="w-full gap-2.5 bg-c2/35 p-10 flex flex-col justify-center items-center rounded-lg cursor-pointer"
+                                                    onClick={() => document.getElementById("uploadProfilePic")?.click()}
+                                                >
                                                     <FontAwesomeIcon icon={faImages} className="text-2xl" />
                                                     Select or drop a file.
                                                 </div>
@@ -213,10 +270,7 @@ export default function SettingsModal({
                                                     <button onClick={closeEdit} className="text-sm px-3 py-2">
                                                         Cancel
                                                     </button>
-                                                    <button
-                                                        className="bg-c1 text-white text-sm px-4 py-2 rounded-lg"
-                                                        onClick={handleSave}
-                                                    >
+                                                    <button className="bg-c1 text-white text-sm px-4 py-2 rounded-lg" onClick={handleSave}>
                                                         Upload
                                                     </button>
                                                 </div>
@@ -230,6 +284,9 @@ export default function SettingsModal({
                                                 {editField === "bio" ? (
                                                     <div className="relative w-full">
                                                         <textarea
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === "Enter") handleSave()
+                                                            }}
                                                             autoFocus
                                                             value={tempValue}
                                                             onChange={(e) => setTempValue(e.target.value)}
@@ -244,6 +301,9 @@ export default function SettingsModal({
                                                 ) : (
                                                     <input
                                                         autoFocus
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Enter") handleSave()
+                                                        }}
                                                         value={tempValue}
                                                         onChange={(e) => setTempValue(e.target.value)}
                                                         className="w-full border border-c1 px-3.5 py-2.5 rounded-xl text-sm bg-transparent text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-c1"
@@ -254,10 +314,7 @@ export default function SettingsModal({
                                                     <button onClick={closeEdit} className="text-sm px-3 py-2">
                                                         Cancel
                                                     </button>
-                                                    <button
-                                                        className="bg-c1 text-white text-sm px-3 py-2 rounded-lg"
-                                                        onClick={handleSave}
-                                                    >
+                                                    <button className="bg-c1 text-white text-sm px-3 py-2 rounded-lg" onClick={handleSave}>
                                                         Save
                                                     </button>
                                                 </div>
@@ -274,7 +331,13 @@ export default function SettingsModal({
     );
 }
 
-function ToggleRow({ label, value, onChange }) {
+interface ToggleRowProps {
+    label: string;
+    value: boolean;
+    onChange: (value: boolean) => void;
+}
+
+function ToggleRow({ label, value, onChange }: ToggleRowProps) {
     return (
         <div className="flex items-center justify-between bg-c1/5 border border-c1/10 px-3 py-2 rounded-lg">
             <span className="text-sm text-c1">{label}</span>

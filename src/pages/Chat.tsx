@@ -1,5 +1,5 @@
-import profile from '../assets/profile.png'
-import { useState, useEffect, useRef, useCallback, act } from 'react'
+import profile from '@/assets/profile.png'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPaperPlane, faXmark, faCheck, faCheckDouble } from '@fortawesome/free-solid-svg-icons'
 import { useAuth } from '@/lib/AuthContext'
@@ -7,6 +7,8 @@ import { unlockPrivateKey } from '@/lib/cryptoSession'
 import { decryptMessage } from '@/lib/cryptoUtils'
 import { motion, AnimatePresence } from "framer-motion"
 import SettingsModal from '@/components/settingsModal'
+import { getSettings, saveSettings } from '@/lib/settings'
+import type {Settings} from "@/types/api"
 import {
   connect,
   onEvent,
@@ -19,28 +21,42 @@ import {
   handleIncomingMessage,
   getConversation
 } from '@/lib/socketClient'
+import { OtherUser, Conversation, ChatMessage, SocketEventData } from '@/types/api'
 
 export default function Chat() {
   const { user, token, passphrase } = useAuth()
   const [showSettings, setShowSettings] = useState(false)
-  const [displayName, setDisplayName] = useState("Tefma Alrex")
-  const [username, setUsername] = useState("tefma")
-  const [bio, setBio] = useState("Workin on a weekend like usual")
-  const [readReceipts, setReadReceipts] = useState(false)
-  const [onlineStatus, setOnlineStatus] = useState(false)
-  const [lastSeen, setLastSeen] = useState(false)
-  const [showTimestamps, setShowTimestamps] = useState(false)
-  const [darkMode, setDarkMode] = useState(false)
-  const [conversations, setConversations] = useState([])
-  const [activeConvo, setActiveConvo] = useState(null)
-  const [messages, setMessages] = useState([])
+  const [conversations, setConversations] = useState<Conversation[]>([])
+  const [activeConvo, setActiveConvo] = useState<Conversation | null>(null)
+  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
   const [cryptoReady, setCryptoReady] = useState(false)
   const [sending, setSending] = useState(false)
+  const isFirstRender = useRef(true);
   const [showNewChat, setShowNewChat] = useState(false);
   const [newChatInput, setNewChatInput] = useState("");
-  const [showError, setShowError] = useState(null)
-  const bottomRef = useRef(null)
+  const [showError, setShowError] = useState<string | null>(null)
+  const bottomRef = useRef<HTMLDivElement>(null)
+  const [settings, setSettings] = useState<Settings>({
+    displayName: "",
+    username: "",
+    bio: "",
+    avatar: "",
+
+    privacy: {
+      readReceipts: false,
+      onlineStatus: false,
+      lastSeen: false,
+    },
+
+    chat: {
+      showTimestamps: false,
+    },
+
+    appearance: {
+      darkMode: false,
+    },
+  });
 
   useEffect(() => {
     console.log("auth state:", { user, token, passphrase })
@@ -48,14 +64,14 @@ export default function Chat() {
     let offEvent = () => { }
     async function init() {
       try {
-        await unlockPrivateKey(user.id, passphrase)
+        await unlockPrivateKey(user?.id as number, passphrase as string)
         setCryptoReady(true)
       } catch (err) {
         console.error("Failed to unlock private key:", err)
         return
       }
 
-      connect(token, user.id, () => {
+      connect(token as string, user?.id as number, () => {
         getConversations();
       })
       offEvent = onEvent(handleSocketEvent)
@@ -70,7 +86,15 @@ export default function Chat() {
   }, [user, token, passphrase])
 
   useEffect(() => {
-    function handleKeyDown(e) {
+    async function loadSettings() {
+        const saved = await getSettings();
+        if (saved) setSettings(saved);
+    }
+    loadSettings();
+}, []);
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'o') {
         e.preventDefault();
         setShowNewChat(true);
@@ -86,10 +110,34 @@ export default function Chat() {
   }, []);
 
   useEffect(() => {
-    if (!showError) return;
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
 
-    function handleKeyDown(e) {
+    const timer = setTimeout(() => {
+      saveSettings(settings);
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [settings]);
+
+  useEffect(() => {
+    if (!showError) return;
+    function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Enter" || e.key === "Escape") setShowError(null);
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showError]);
+
+  useEffect(() => {
+    if (!showSettings) return;
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setShowSettings(false);
     }
 
     window.addEventListener("keydown", handleKeyDown);
@@ -97,34 +145,34 @@ export default function Chat() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [showError]);
+  }, [showSettings]);
 
-  function updateSidebar(msg) {
+  function updateSidebar(msg: ChatMessage) {
     setConversations(prev => {
       const updated = prev.map(convo => {
         if (convo.conversationId !== msg.conversationId) return convo;
         return {
           ...convo,
-          lastMessage: msg.plaintext || msg.text,
+          lastMessage: msg.plaintext ?? msg.text ?? "",
           updatedAt: msg.createdAt
         };
       });
       updated.sort(
-        (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+        (a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime()
       );
       return updated;
     });
   }
 
-  const handleSocketEvent = useCallback(async (data) => {
+  const handleSocketEvent = useCallback(async (data: SocketEventData) => {
     switch (data.type) {
 
       case "conversations": {
         console.log(data.data)
         const decrypt = await Promise.all(
-          data.data.map(async (convo) => {
+          data.data.map(async (convo: Conversation) => {
             try {
-              const lastMessage = await decryptMessage(convo.lastMessage);
+              const lastMessage = await decryptMessage(convo.lastMessage as any);
               return { ...convo, lastMessage }
             } catch {
               return { ...convo, lastMessage: null }
@@ -147,9 +195,9 @@ export default function Chat() {
       case "messages": {
         console.log(data.data)
         const decrypted = await Promise.all(
-          data.data.map(async (msg) => {
+          data.data.map(async (msg: ChatMessage) => {
             try {
-              const plaintext = await decryptMessage(msg.ciphertext)
+              const plaintext = await decryptMessage(msg.ciphertext as string)
               return { ...msg, plaintext }
             } catch {
               return { ...msg, plaintext: null }
@@ -161,7 +209,7 @@ export default function Chat() {
       }
       case "receive_message": {
         getConversations();
-        if (data.data.senderId != data.data.receiverId)await handleIncomingMessage(data.data);
+        if (data.data.senderId != data.data.receiverId) await handleIncomingMessage(data.data);
         break
       }
       case "conversation_created": {
@@ -174,6 +222,7 @@ export default function Chat() {
         if (data.message == "User not found") {
           setShowError("Could not find the user")
         }
+        break;
       }
       case "message_updated": {
         const updated = data.message;
@@ -191,7 +240,7 @@ export default function Chat() {
         setMessages(prev =>
           prev.map(msg => {
             if (
-              msg.conversationId === conversationId && msg.senderId === user.id
+              msg.conversationId === conversationId && msg.senderId === user?.id
             ) {
               return { ...msg, readAt: new Date().toISOString() };
             }
@@ -203,12 +252,12 @@ export default function Chat() {
       default:
         break
     }
-  }, [])
+  }, [user])
 
   useEffect(() => {
-    function onIncoming(e) {
+    function onIncoming(e: Event) {
       console.log("maak")
-      const msg = e.detail;
+      const msg = (e as CustomEvent<ChatMessage>).detail;
       updateSidebar(msg);
       if (!activeConvo) return;
       if (
@@ -245,14 +294,14 @@ export default function Chat() {
   }
 
   async function handleSend() {
-    if (!input.trim() || !activeConvo || !cryptoReady || sending) return
+    if (!input.trim() || !activeConvo || !cryptoReady || sending || !user) return
     setSending(true)
 
     try {
       console.log(activeConvo.otherUser.id, input.trim());
       await socketSend(activeConvo.otherUser.id, input.trim())
 
-      const possibleMessage = {
+      const possibleMessage: ChatMessage = {
         id: crypto.randomUUID(),
         senderId: user.id,
         receiverId: activeConvo.otherUser.id,
@@ -271,29 +320,29 @@ export default function Chat() {
     }
   }
 
-  function formatTime(date) {
+  function formatTime(date: string) {
     return new Date(date).toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
     });
   }
 
-  function handleKeyDown(e) {
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
       handleSend()
     }
   }
 
-  function displayText(msg) {
+  function displayText(msg: ChatMessage) {
     return msg.plaintext || msg.text || "you cannot see"
   }
 
-  function isMine(msg) {
+  function isMine(msg: ChatMessage) {
     return msg.senderId === user?.id
   }
 
-  function initials(str) {
+  function initials(str?: string) {
     if (!str) return "?"
     let temp = str.split(" ");
     if (temp.length > 1) return temp[0].toUpperCase() + temp[1].toUpperCase();
@@ -555,22 +604,8 @@ export default function Chat() {
       <SettingsModal
         open={showSettings}
         onClose={() => setShowSettings(false)}
-        displayName={displayName}
-        username={username}
-        bio={bio}
-        setUsername={setUsername}
-        setDisplayName={setDisplayName}
-        setBio={setBio}
-        readReceipts={readReceipts}
-        setReadReceipts={setReadReceipts}
-        onlineStatus={onlineStatus}
-        setOnlineStatus={setOnlineStatus}
-        lastSeen={lastSeen}
-        setLastSeen={setLastSeen}
-        showTimestamps={showTimestamps}
-        setShowTimestamps={setShowTimestamps}
-        darkMode={darkMode}
-        setDarkMode={setDarkMode}
+        settings={settings}
+        setSettings={setSettings}
       />
     </div>
   )

@@ -1,20 +1,30 @@
-import { useState } from "react";
+import { useState, ChangeEvent, FormEvent } from "react";
 import { generateKeyPair } from "@/lib/crypto";
 import { useAuth } from "@/lib/AuthContext";
+import { RegisterResponse } from "@/types/api";
 
 const KEYS_API = "http://localhost:3141/api/keys";
+
+type Mode = "login" | "register";
+
+interface FormState {
+  username: string;
+  email: string;
+  password: string;
+}
 
 export default function Login() {
   const { login, register } = useAuth();
 
-  const [mode, setMode] = useState("login");
-  const [form, setForm] = useState({ username: "", email: "", password: "" });
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [mode, setMode] = useState<Mode>("login");
+  const [form, setForm] = useState<FormState>({ username: "", email: "", password: "" });
+  const [message, setMessage] = useState<string>("");
+  const [error, setError] = useState<string>("");
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setMessage("");
     setError("");
@@ -23,9 +33,16 @@ export default function Login() {
       if (mode === "login") {
         await login(form.username, form.password);
       } else {
-        const data = await register(form.username, form.email, form.password);
+        const res: RegisterResponse = await register(form.username, form.email, form.password);
+
+        if (!res.success) {
+          throw new Error(res.message || "Registration failed");
+        }
+
+        const { user, token } = res.data;
+
         const { publicKey } = await generateKeyPair(
-          data.user.id,
+          user.id,
           form.username,
           form.password
         );
@@ -34,11 +51,10 @@ export default function Login() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${data.token}`,
+            "Authorization": `Bearer ${token}`,
           },
           body: JSON.stringify({ publicKey }),
         });
-
 
         if (!keyRes.ok) {
           const keyData = await keyRes.json();
@@ -50,7 +66,8 @@ export default function Login() {
         setForm({ username: "", email: "", password: "" });
       }
     } catch (err) {
-      setError(err.message || "Server error");
+      const message = err instanceof Error ? err.message : "Server error";
+      setError(message);
     }
   }
 
