@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import SettingsModal from '@/components/settingsModal'
 import { getSettings, saveSettings } from '@/lib/settings'
 import type { Settings } from "@/types/api"
+import ProfileDetails from '@/components/profileDetails'
 import {
   connect,
   onEvent,
@@ -37,6 +38,7 @@ export default function Chat() {
   const [newChatInput, setNewChatInput] = useState("");
   const [showError, setShowError] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const [profileDetails, setProfileDetails] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState("");
   const [settings, setSettings] = useState<Settings>({
     displayName: "",
@@ -130,7 +132,7 @@ export default function Chat() {
   useEffect(() => {
     if (!showError) return;
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Enter" || e.key === "Escape") setShowError(null);
+      if (e.key === "Enter" || e.key === "Escape") { setShowError(null); }
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => {
@@ -151,6 +153,20 @@ export default function Chat() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [showSettings]);
+
+  useEffect(() => {
+    if (!profileDetails) return;
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setProfileDetails(false);
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [profileDetails]);
 
   function updateSidebar(msg: ChatMessage) {
     setConversations(prev => {
@@ -404,7 +420,9 @@ export default function Chat() {
                 }`}
             >
               <div className="w-10 h-10 rounded-full bg-[#7D98A1] flex items-center justify-center text-[#1C2321] font-bold text-md shrink-0">
-                {initials(convo.otherUser.username || String(convo.otherUser.id))}
+                {convo.otherUser.avatarUrl ?
+                  <img src={convo.otherUser.avatarUrl} className='w-10 h-10 rounded-full object-cover ring-2 ring-offset-2 ring-c1/100 cursor-pointer' />
+                  : initials(convo.otherUser.username || String(convo.otherUser.id))}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-medium truncate">
@@ -424,12 +442,10 @@ export default function Chat() {
         <div className="w-full bg-[#7D98A1] h-20 flex items-center px-3.5 rounded-br-[60%] shrink-0">
           {activeConvo ? (
             <>
-              <img
-                className="w-[50px] h-[50px] rounded-full object-cover ring-2 ring-offset-2 ring-c1/60 cursor-pointer"
-                src={activeConvo.otherUser.avatarUrl}
-                alt="profile"
-              />
-              <span className="font-medium tracking-wide pl-3">
+              {activeConvo.otherUser.avatarUrl ?
+                <img onClick={() => setProfileDetails(true)} src={activeConvo.otherUser.avatarUrl} className='w-[50px] h-[50px] rounded-full object-cover ring-2 ring-offset-2 ring-c1/100 cursor-pointer' />
+                : initials(activeConvo.otherUser.username || String(activeConvo.otherUser.id))}
+              <span className="font-medium tracking-wide pl-3" onClick={() => setProfileDetails(true)}>
                 {activeConvoName}
               </span>
             </>
@@ -616,6 +632,17 @@ export default function Chat() {
         setSettings={setSettings}
         avatarUrl={avatarUrl}
         setAvatarUrl={setAvatarUrl}
+      />
+      <ProfileDetails
+        open={profileDetails}
+        onClose={() => setProfileDetails(false)}
+        data={activeConvo?.otherUser || {
+          id: 0,
+          username: "",
+          displayName: "",
+          avatarUrl: "",
+          bio: ""
+        }}
       />
     </div>
   )

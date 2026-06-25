@@ -112,6 +112,7 @@ export interface OtherUser {
     username: string,
     displayName: string,
     avatarUrl: string,
+    bio: string;
 }
 
 export interface ChatMessage {
