@@ -7,7 +7,7 @@ import { unlockPrivateKey } from '@/lib/cryptoSession'
 import { decryptMessage } from '@/lib/cryptoUtils'
 import { motion, AnimatePresence } from "framer-motion"
 import SettingsModal from '@/components/settingsModal'
-import { getSettings, saveSettings } from '@/lib/settings'
+import { getSettings, getUsername, saveSettings } from '@/lib/settings'
 import type {Settings} from "@/types/api"
 import {
   connect,
@@ -39,7 +39,6 @@ export default function Chat() {
   const bottomRef = useRef<HTMLDivElement>(null)
   const [settings, setSettings] = useState<Settings>({
     displayName: "",
-    username: "",
     bio: "",
     avatar: "",
 
@@ -57,6 +56,7 @@ export default function Chat() {
       darkMode: false,
     },
   });
+  const [username, setUsername] = useState("");
 
   useEffect(() => {
     console.log("auth state:", { user, token, passphrase })
@@ -88,7 +88,9 @@ export default function Chat() {
   useEffect(() => {
     async function loadSettings() {
         const saved = await getSettings();
+        const username = await getUsername();
         if (saved) setSettings(saved);
+        if (username) setUsername(username);
     }
     loadSettings();
 }, []);
@@ -605,6 +607,8 @@ export default function Chat() {
         open={showSettings}
         onClose={() => setShowSettings(false)}
         settings={settings}
+        username={username}
+        setUsername={setUsername}
         setSettings={setSettings}
       />
     </div>

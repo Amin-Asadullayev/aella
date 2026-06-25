@@ -12,6 +12,24 @@ export async function saveSettings(settings: Settings): Promise<void> {
     console.log("hello dorld")
 }
 
+export async function saveUsername(username: string): Promise<{success: boolean, message: string}> {
+    const res = await fetch(`${BASE_URL}/api/settings/username`, {
+        method: 'PUT',
+        credentials: "include",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username }),
+    })
+    const body = await res.json();
+    return body;
+}
+
+export async function getUsername(): Promise<string>{
+  const res = await fetch(`${BASE_URL}/api/settings/username`, {credentials: "include"});
+  const data = await res.json();
+  if (data.success) return data.data.username;
+  else return "John Doe"
+}
+
 export async function getSettings(): Promise<Settings>{
     const res = await fetch(`${BASE_URL}/api/settings/`, {credentials: "include"});
     console.log("Hello gorld")
@@ -19,7 +37,6 @@ export async function getSettings(): Promise<Settings>{
     if (data.success) return data.data.settings
     else return {
     displayName: "",
-    username: "",
     bio: "",
     avatar: "",
 

@@ -134,7 +134,6 @@ export interface SocketEventData {
 
 export type Settings = {
     displayName: string;
-    username: string;
     bio: string;
     avatar: string;
 

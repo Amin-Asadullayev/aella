@@ -4,36 +4,21 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark, faPenToSquare, faImages } from "@fortawesome/free-solid-svg-icons";
 import ProfilePhoto from "@/assets/profile.png";
 import { EditField, TabId } from "@/types/api";
+import { Settings } from "@/types/api";
+import { saveUsername } from "@/lib/settings";
 
-type Settings = {
-    displayName: string;
-    username: string;
-    bio: string;
-    avatar: string;
-    privacy: {
-        readReceipts: boolean;
-        onlineStatus: boolean;
-        lastSeen: boolean;
-    };
-    chat: {
-        showTimestamps: boolean;
-    };
-    appearance: {
-        darkMode: boolean;
-    };
-};
-
-type Props = {
+export default function SettingsModal({ open, onClose, settings, setSettings, username, setUsername }: {
     open: boolean;
     onClose: () => void;
     settings: Settings;
     setSettings: React.Dispatch<React.SetStateAction<Settings>>;
-};
-
-export default function SettingsModal({ open, onClose, settings, setSettings }: Props) {
+    username: string;
+    setUsername: React.Dispatch<React.SetStateAction<string>>;
+}) {
     const [tab, setTab] = useState<TabId>("profile");
     const [editField, setEditField] = useState<EditField>(null);
     const [tempValue, setTempValue] = useState("");
+    const [error, setError] = useState("");
 
     const tabs: { id: TabId; label: string }[] = [
         { id: "profile", label: "Profile" },
@@ -51,13 +36,20 @@ export default function SettingsModal({ open, onClose, settings, setSettings }: 
     function closeEdit() {
         setEditField(null);
         setTempValue("");
+        setError("")
     }
 
-    function handleSave() {
+    async function handleSave() {
         if (editField === "displayName") {
             setSettings(prev => ({ ...prev, displayName: tempValue }));
         } else if (editField === "username") {
-            setSettings(prev => ({ ...prev, username: tempValue }));
+            const result = await saveUsername(tempValue);
+            if (!result.success) {
+                setError(result.message)
+                return;
+            }
+            setError("")
+            setUsername(tempValue)
         } else if (editField === "bio") {
             setSettings(prev => ({ ...prev, bio: tempValue }));
         }
@@ -143,8 +135,8 @@ export default function SettingsModal({ open, onClose, settings, setSettings }: 
                                             </div>
 
                                             <div className="flex items-center gap-2">
-                                                <span className="text-base text-c1/80">@{settings.username || "—"}</span>
-                                                <button onClick={() => openEdit("username", settings.username)} className="text-c1/50 hover:text-c1 transition">
+                                                <span className="text-base text-c1/80">@{username || "—"}</span>
+                                                <button onClick={() => openEdit("username", username)} className="text-c1/50 hover:text-c1 transition">
                                                     <FontAwesomeIcon icon={faPenToSquare} className="w-4 h-4" />
                                                 </button>
                                             </div>
@@ -280,6 +272,10 @@ export default function SettingsModal({ open, onClose, settings, setSettings }: 
                                                 <h2 className="font-semibold mb-3 mt-0.5">
                                                     Change your {editField === "displayName" ? "display name" : editField === "username" ? "username" : "bio"}
                                                 </h2>
+                                                {(error && editField === "username") && (
+                                                    <p className="-mt-1 text-sm mb-1 text-c3 font-medium">{error}</p>
+                                                )
+                                                }
 
                                                 {editField === "bio" ? (
                                                     <div className="relative w-full">
