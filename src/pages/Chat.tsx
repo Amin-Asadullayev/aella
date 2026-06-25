@@ -7,8 +7,8 @@ import { unlockPrivateKey } from '@/lib/cryptoSession'
 import { decryptMessage } from '@/lib/cryptoUtils'
 import { motion, AnimatePresence } from "framer-motion"
 import SettingsModal from '@/components/settingsModal'
-import { getSettings, getUsername, saveSettings, getAvatar } from '@/lib/settings'
-import type {Settings} from "@/types/api"
+import { getSettings, saveSettings } from '@/lib/settings'
+import type { Settings } from "@/types/api"
 import {
   connect,
   onEvent,
@@ -21,7 +21,7 @@ import {
   handleIncomingMessage,
   getConversation
 } from '@/lib/socketClient'
-import { OtherUser, Conversation, ChatMessage, SocketEventData } from '@/types/api'
+import { Conversation, ChatMessage, SocketEventData } from '@/types/api'
 
 export default function Chat() {
   const { user, token, passphrase } = useAuth()
@@ -87,15 +87,16 @@ export default function Chat() {
 
   useEffect(() => {
     async function loadSettings() {
-        const saved = await getSettings();
-        const username = await getUsername();
-        const avatar = await getAvatar();
-        if (saved) setSettings(saved);
-        if (username) setUsername(username);
-        if(avatar) setAvatarUrl(avatar)
+      const saved = await getSettings();
+      console.log(saved)
+      if (saved) {
+        setSettings(saved.settings);
+        setUsername(saved.username);
+        setAvatarUrl(saved.avatarUrl)
+      }
     }
     loadSettings();
-}, []);
+  }, []);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -613,7 +614,7 @@ export default function Chat() {
         username={username}
         setUsername={setUsername}
         setSettings={setSettings}
-        avatarUrl = {avatarUrl}
+        avatarUrl={avatarUrl}
         setAvatarUrl={setAvatarUrl}
       />
     </div>

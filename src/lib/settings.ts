@@ -33,42 +33,31 @@ export async function changeAvatar(formData: FormData) {
   return data;
 }
 
-export async function getUsername(): Promise<string> {
-  const res = await fetch(`${BASE_URL}/api/settings/username`, { credentials: "include" });
-  const data = await res.json();
-  if (data.success) return data.data.username;
-  else return "John Doe"
-}
-
-export async function getAvatar(): Promise<string> {
-  const res = await fetch(`${BASE_URL}/api/settings/avatar`, { credentials: "include" });
-  const data = await res.json();
-  console.log(data)
-  if (data.success) return data.data.avatarUrl;
-  else return ""
-}
-
-export async function getSettings(): Promise<Settings> {
+export async function getSettings(): Promise<{ settings: Settings, username: string, avatarUrl: string }> {
   const res = await fetch(`${BASE_URL}/api/settings/`, { credentials: "include" });
   console.log("Hello gorld")
   const data = await res.json();
-  if (data.success) return data.data.settings
+  if (data.success) return data.data
   else return {
-    displayName: "",
-    bio: "",
+    username: "",
+    avatarUrl: "",
+    settings: {
+      displayName: "",
+      bio: "",
 
-    privacy: {
-      readReceipts: false,
-      onlineStatus: false,
-      lastSeen: false,
-    },
+      privacy: {
+        readReceipts: false,
+        onlineStatus: false,
+        lastSeen: false,
+      },
 
-    chat: {
-      showTimestamps: false,
-    },
+      chat: {
+        showTimestamps: false,
+      },
 
-    appearance: {
-      darkMode: false,
-    },
+      appearance: {
+        darkMode: false,
+      },
+    }
   }
 }
