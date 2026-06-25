@@ -7,7 +7,7 @@ import { unlockPrivateKey } from '@/lib/cryptoSession'
 import { decryptMessage } from '@/lib/cryptoUtils'
 import { motion, AnimatePresence } from "framer-motion"
 import SettingsModal from '@/components/settingsModal'
-import { getSettings, getUsername, saveSettings } from '@/lib/settings'
+import { getSettings, getUsername, saveSettings, getAvatar } from '@/lib/settings'
 import type {Settings} from "@/types/api"
 import {
   connect,
@@ -37,10 +37,10 @@ export default function Chat() {
   const [newChatInput, setNewChatInput] = useState("");
   const [showError, setShowError] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const [avatarUrl, setAvatarUrl] = useState("");
   const [settings, setSettings] = useState<Settings>({
     displayName: "",
     bio: "",
-    avatar: "",
 
     privacy: {
       readReceipts: false,
@@ -89,8 +89,10 @@ export default function Chat() {
     async function loadSettings() {
         const saved = await getSettings();
         const username = await getUsername();
+        const avatar = await getAvatar();
         if (saved) setSettings(saved);
         if (username) setUsername(username);
+        if(avatar) setAvatarUrl(avatar)
     }
     loadSettings();
 }, []);
@@ -269,7 +271,7 @@ export default function Chat() {
       ) {
         setMessages(prev => [...prev, msg]);
         console.log(activeConvo.conversationId)
-        markAsRead(activeConvo.conversationId);
+        if (settings.privacy.readReceipts) markAsRead(activeConvo.conversationId);
       }
     }
 
@@ -281,7 +283,7 @@ export default function Chat() {
     if (!activeConvo) return
     setMessages([])
     getMessages(activeConvo.conversationId)
-    markAsRead(activeConvo.conversationId)
+    if (settings.privacy.readReceipts) markAsRead(activeConvo.conversationId)
   }, [activeConvo])
 
   useEffect(() => {
@@ -353,8 +355,8 @@ export default function Chat() {
   }
 
   let activeConvoName = activeConvo
-    ? conversations.find(c => c.conversationId === activeConvo.conversationId)?.otherUser.username
-    || `User ${activeConvo.otherUser.id}`
+    ? conversations.find(c => c.conversationId === activeConvo.conversationId)?.otherUser.displayName
+    || activeConvo.otherUser.username
     : null
 
   return (
@@ -462,7 +464,7 @@ export default function Chat() {
                   className={`flex justify-end items-center gap-1 mt-1 text-[10px]
     ${isMine(msg) ? "text-white/60" : "text-gray-500"}`}
                 >
-                  <span>{formatTime(msg.createdAt)}</span>
+                  <span>{settings.chat.showTimestamps && formatTime(msg.createdAt)}</span>
 
                   {isMine(msg) && (
                     <FontAwesomeIcon
@@ -611,6 +613,8 @@ export default function Chat() {
         username={username}
         setUsername={setUsername}
         setSettings={setSettings}
+        avatarUrl = {avatarUrl}
+        setAvatarUrl={setAvatarUrl}
       />
     </div>
   )

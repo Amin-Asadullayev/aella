@@ -1,19 +1,21 @@
-import { useState, ChangeEvent } from "react";
+import React, { useState, ChangeEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark, faPenToSquare, faImages } from "@fortawesome/free-solid-svg-icons";
 import ProfilePhoto from "@/assets/profile.png";
 import { EditField, TabId } from "@/types/api";
 import { Settings } from "@/types/api";
-import { saveUsername } from "@/lib/settings";
+import { saveUsername, changeAvatar } from "@/lib/settings";
 
-export default function SettingsModal({ open, onClose, settings, setSettings, username, setUsername }: {
+export default function SettingsModal({ open, onClose, settings, setSettings, username, setUsername , avatarUrl, setAvatarUrl}: {
     open: boolean;
     onClose: () => void;
     settings: Settings;
     setSettings: React.Dispatch<React.SetStateAction<Settings>>;
     username: string;
     setUsername: React.Dispatch<React.SetStateAction<string>>;
+    avatarUrl: string,
+    setAvatarUrl: React.Dispatch<React.SetStateAction<string>>;
 }) {
     const [tab, setTab] = useState<TabId>("profile");
     const [editField, setEditField] = useState<EditField>(null);
@@ -41,17 +43,17 @@ export default function SettingsModal({ open, onClose, settings, setSettings, us
 
     async function handleSave() {
         if (editField === "displayName") {
-            if (tempValue.length < 2 || tempValue.length > 20){
+            if (tempValue.length < 2 || tempValue.length > 20) {
                 setError("Display name is too short or too long")
                 return;
             }
             setSettings(prev => ({ ...prev, displayName: tempValue }));
         } else if (editField === "username") {
-            if (tempValue.length < 2 || tempValue.length > 20){
+            if (tempValue.length < 2 || tempValue.length > 20) {
                 setError("Username is too short or too long")
                 return;
             }
-            if (!/^[a-z]+$/.test(tempValue)){
+            if (!/^[a-z]+$/.test(tempValue)) {
                 setError("Invalid username")
                 return;
             }
@@ -63,7 +65,7 @@ export default function SettingsModal({ open, onClose, settings, setSettings, us
             setError("")
             setUsername(tempValue)
         } else if (editField === "bio") {
-            if (tempValue.length > 70){
+            if (tempValue.length > 70) {
                 setError("Bio is too long")
                 return;
             }
@@ -72,12 +74,14 @@ export default function SettingsModal({ open, onClose, settings, setSettings, us
         closeEdit();
     }
 
-    function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
+    async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
         if (!file) return;
-        const url = URL.createObjectURL(file);
-        setSettings(prev => ({ ...prev, avatar: url }));
         setEditField(null);
+        const formData = new FormData();
+        formData.append("avatar", file);
+        const res = await changeAvatar(formData);
+        setAvatarUrl(res.data.avatarUrl);
     }
 
     return (
@@ -131,12 +135,12 @@ export default function SettingsModal({ open, onClose, settings, setSettings, us
                                         <div className="flex flex-col overflow-y-auto items-center justify-center flex-1 gap-2">
                                             <div className="relative group mb-3">
                                                 <img
-                                                    src={settings.avatar || ProfilePhoto}
-                                                    onClick={() => openEdit("avatar", settings.avatar)}
+                                                    src={avatarUrl || ProfilePhoto}
+                                                    onClick={() => openEdit("avatar", avatarUrl)}
                                                     className="w-[140px] h-[140px] rounded-full object-cover ring-2 ring-offset-2 ring-c1/20 cursor-pointer transition group-hover:brightness-75"
                                                 />
                                                 <button
-                                                    onClick={() => openEdit("avatar", settings.avatar)}
+                                                    onClick={() => openEdit("avatar", avatarUrl)}
                                                     className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
                                                 >
                                                     <FontAwesomeIcon icon={faPenToSquare} className="w-7 h-7 text-white" />
@@ -316,7 +320,7 @@ export default function SettingsModal({ open, onClose, settings, setSettings, us
                                                         onKeyDown={(e) => {
                                                             if (e.key === "Enter") handleSave()
                                                         }}
-                                                    maxLength={20}
+                                                        maxLength={20}
                                                         value={tempValue}
                                                         onChange={(e) => setTempValue(e.target.value)}
                                                         className="w-full border border-c1 px-3.5 py-2.5 rounded-xl text-sm bg-transparent text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-c1"
