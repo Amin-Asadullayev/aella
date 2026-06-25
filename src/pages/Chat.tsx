@@ -171,6 +171,7 @@ export default function Chat() {
 
       case "conversations": {
         console.log(data.data)
+        console.log("hitit")
         const decrypt = await Promise.all(
           data.data.map(async (convo: Conversation) => {
             try {
@@ -404,7 +405,7 @@ export default function Chat() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-medium truncate">
-                  {convo.otherUser.username || `User ${convo.otherUser.id}`}
+                  {convo.otherUser.displayName || convo.otherUser.username}
                 </div>
                 <div className="text-xs text-white/40 truncate">
                   {convo.lastMessage}

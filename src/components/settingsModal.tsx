@@ -41,9 +41,21 @@ export default function SettingsModal({ open, onClose, settings, setSettings, us
 
     async function handleSave() {
         if (editField === "displayName") {
+            if (tempValue.length < 2 || tempValue.length > 20){
+                setError("Display name is too short or too long")
+                return;
+            }
             setSettings(prev => ({ ...prev, displayName: tempValue }));
         } else if (editField === "username") {
-            const result = await saveUsername(tempValue);
+            if (tempValue.length < 2 || tempValue.length > 20){
+                setError("Username is too short or too long")
+                return;
+            }
+            if (!/^[a-z]+$/.test(tempValue)){
+                setError("Invalid username")
+                return;
+            }
+            const result = await saveUsername(tempValue.toLowerCase());
             if (!result.success) {
                 setError(result.message)
                 return;
@@ -51,6 +63,10 @@ export default function SettingsModal({ open, onClose, settings, setSettings, us
             setError("")
             setUsername(tempValue)
         } else if (editField === "bio") {
+            if (tempValue.length > 70){
+                setError("Bio is too long")
+                return;
+            }
             setSettings(prev => ({ ...prev, bio: tempValue }));
         }
         closeEdit();
@@ -272,7 +288,7 @@ export default function SettingsModal({ open, onClose, settings, setSettings, us
                                                 <h2 className="font-semibold mb-3 mt-0.5">
                                                     Change your {editField === "displayName" ? "display name" : editField === "username" ? "username" : "bio"}
                                                 </h2>
-                                                {(error && editField === "username") && (
+                                                {error && (
                                                     <p className="-mt-1 text-sm mb-1 text-c3 font-medium">{error}</p>
                                                 )
                                                 }
@@ -300,6 +316,7 @@ export default function SettingsModal({ open, onClose, settings, setSettings, us
                                                         onKeyDown={(e) => {
                                                             if (e.key === "Enter") handleSave()
                                                         }}
+                                                    maxLength={20}
                                                         value={tempValue}
                                                         onChange={(e) => setTempValue(e.target.value)}
                                                         className="w-full border border-c1 px-3.5 py-2.5 rounded-xl text-sm bg-transparent text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-c1"

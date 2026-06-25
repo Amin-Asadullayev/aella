@@ -109,7 +109,8 @@ export interface SettingsModalProps {
 
 export interface OtherUser {
     id: number;
-    username: string
+    username: string,
+    displayName: string,
 }
 
 export interface ChatMessage {
