@@ -111,6 +111,7 @@ export interface OtherUser {
     id: number;
     username: string,
     displayName: string,
+    avatarUrl: string,
 }
 
 export interface ChatMessage {

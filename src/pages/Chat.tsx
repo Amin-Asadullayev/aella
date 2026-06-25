@@ -425,8 +425,8 @@ export default function Chat() {
           {activeConvo ? (
             <>
               <img
-                className="w-[50px] h-[50px] overflow-hidden rounded-full outline outline-2 outline-offset-2 outline-[#1C2321]"
-                src={profile}
+                className="w-[50px] h-[50px] rounded-full object-cover ring-2 ring-offset-2 ring-c1/60 cursor-pointer"
+                src={activeConvo.otherUser.avatarUrl}
                 alt="profile"
               />
               <span className="font-medium tracking-wide pl-3">

@@ -6,8 +6,9 @@ import ProfilePhoto from "@/assets/profile.png";
 import { EditField, TabId } from "@/types/api";
 import { Settings } from "@/types/api";
 import { saveUsername, changeAvatar } from "@/lib/settings";
+import imageCompression from "browser-image-compression";
 
-export default function SettingsModal({ open, onClose, settings, setSettings, username, setUsername , avatarUrl, setAvatarUrl}: {
+export default function SettingsModal({ open, onClose, settings, setSettings, username, setUsername, avatarUrl, setAvatarUrl }: {
     open: boolean;
     onClose: () => void;
     settings: Settings;
@@ -74,14 +75,21 @@ export default function SettingsModal({ open, onClose, settings, setSettings, us
         closeEdit();
     }
 
+
     async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
         if (!file) return;
         setEditField(null);
+        const compressedFile = await imageCompression(file, {
+            maxSizeMB: 0.2,
+            maxWidthOrHeight: 256,
+            useWebWorker: true,
+        });
         const formData = new FormData();
-        formData.append("avatar", file);
+        formData.append("avatar", compressedFile);
         const res = await changeAvatar(formData);
-        setAvatarUrl(res.data.avatarUrl);
+
+        if (res.success) setAvatarUrl(res.data.avatarUrl);
     }
 
     return (
