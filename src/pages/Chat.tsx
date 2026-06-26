@@ -437,23 +437,24 @@ export default function Chat() {
         </div>
       </div>
 
-      {activeConvo && <div className="flex-1 flex flex-col bg-gray-100">
+      {activeConvo && <div className="flex-1 flex flex-col bg-[#eef1f2]">
 
-        <div className="w-full bg-[#7D98A1] h-20 flex items-center px-3.5 rounded-br-[60%] shrink-0">
-          {activeConvo ? (
-            <>
-              {activeConvo.otherUser.avatarUrl ?
-                <img onClick={() => setProfileDetails(true)} src={activeConvo.otherUser.avatarUrl} className='w-[50px] h-[50px] rounded-full object-cover ring-2 ring-offset-2 ring-c1/100 cursor-pointer' />
-                : initials(activeConvo.otherUser.username || String(activeConvo.otherUser.id))}
-              <span className="font-medium tracking-wide pl-3" onClick={() => setProfileDetails(true)}>
-                {activeConvoName}
-              </span>
-            </>
-          ) : (
-            <span className="font-medium tracking-wide pl-3">
-              :username:
-            </span>
-          )}
+        <div className="w-full bg-[#1C2321] h-[68px] flex items-center px-5 gap-3 shrink-0 z-10
+  border-b border-b-[#2e3b38]
+  border-l-2 border-l-[#DE6449]">
+          <div className="relative">
+            {activeConvo.otherUser.avatarUrl
+              ? <img onClick={() => setProfileDetails(true)} src={activeConvo.otherUser.avatarUrl} className="cursor-pointer w-10 h-10 rounded-full object-cover" />
+              : <div className="w-10 h-10 rounded-full bg-[#7D98A1] cursor-pointer flex items-center justify-center text-[#1C2321] text-sm font-bold">
+                {initials(activeConvo.otherUser.username || String(activeConvo.otherUser.id))}
+              </div>
+            }
+            <span className="absolute bottom-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-[#DE6449] border-2 border-[#1C2321]" />
+          </div>
+          <div className="flex-1">
+            <p onClick={() => setProfileDetails(true)} className="text-[15px] font-semibold text-[#e8f0f2] leading-tight cursor-pointer">{activeConvoName}</p>
+            <p className="text-[11px] text-[#7D98A1] mt-0.5">Active now</p>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto flex flex-col gap-3 px-5 py-4">
@@ -469,23 +470,24 @@ export default function Chat() {
               className={`flex ${isMine(msg) ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-[65%] px-4 py-2.5 rounded-2xl text-sm
+                className={`max-w-[65%] px-4 py-2.5 text-sm rounded-[18px]
   ${isMine(msg)
-                    ? "bg-[#1C2321] text-white rounded-br-sm"
-                    : "bg-white text-gray-800 rounded-bl-sm"
+                    ? "bg-[#1C2321] text-[#e8f0f2] rounded-br-[4px]"
+                    : "bg-white text-[#1C2321] rounded-bl-[4px] shadow-sm"
                   }`}
               >
                 <div>{displayText(msg)}</div>
 
                 <div
                   className={`flex justify-end items-center gap-1 mt-1 text-[10px]
-    ${isMine(msg) ? "text-white/60" : "text-gray-500"}`}
+  ${isMine(msg) ? "text-[#7D98A1]/70" : "text-[#8fa8b0]"}`}
                 >
                   <span>{settings.chat.showTimestamps && formatTime(msg.createdAt)}</span>
 
                   {isMine(msg) && (
                     <FontAwesomeIcon
                       icon={msg.readAt ? faCheckDouble : faCheck}
+                      className={msg.readAt ? "text-[#DE6449]" : "text-white/40"}
                     />
                   )}
                 </div>
