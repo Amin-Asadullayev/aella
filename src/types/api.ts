@@ -114,6 +114,7 @@ export interface OtherUser {
     avatarUrl: string,
     bio: string;
     online?: boolean;
+    lastSeen?: string | null;
 }
 
 export interface ChatMessage {
@@ -135,6 +136,7 @@ export interface SocketEventData {
     conversationId?: number;
     userId?: number;
     online?: boolean;
+    lastSeen?: string | null;
 }
 
 

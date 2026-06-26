@@ -190,6 +190,18 @@ export default function Chat() {
     });
   }
 
+  function formatLastSeen(lastSeen?: string | null) {
+    if (!lastSeen) return "Offline";
+    const difference = (new Date()).getTime() - (new Date(lastSeen)).getTime();
+    const minutes = Math.floor(difference / 60000);
+    const hours = Math.floor(difference / 3600000);
+    if (minutes < 1) return "Last seen just now";
+    if (minutes < 60) return `Last seen ${minutes}m ago`;
+    if (hours < 24 && (new Date(lastSeen)).getDate() === (new Date()).getDate()) return `Last seen today at ${formatTime(lastSeen)}`;
+    if (hours < 48) return `Last seen yesterday at ${formatTime(lastSeen)}`;
+    return `Last seen ${(new Date(lastSeen)).toLocaleDateString([], { month: "short", day: "numeric" })}`;
+  }
+
   const handleSocketEvent = useCallback(async (data: SocketEventData) => {
     switch (data.type) {
 
@@ -277,11 +289,11 @@ export default function Chat() {
         break;
       }
       case "presence": {
-        const { userId, online } = data;
+        const { userId, online, lastSeen } = data;
         setConversations(prev =>
           prev.map(c =>
             c.otherUser.id === userId
-              ? { ...c, otherUser: { ...c.otherUser, online: online ?? false } }
+              ? { ...c, otherUser: { ...c.otherUser, online: online ?? false, lastSeen } }
               : c
           )
         );
@@ -394,6 +406,7 @@ export default function Chat() {
   let activeConvoOnline = conversations.find(
     c => c.conversationId === activeConvo?.conversationId
   )?.otherUser.online ?? false;
+  const activeConvoData = conversations.find(c => c.conversationId === activeConvo?.conversationId);
 
   return (
 
@@ -475,7 +488,7 @@ export default function Chat() {
           <div className="flex-1">
             <p onClick={() => setProfileDetails(true)} className="text-[15px] font-semibold text-[#e8f0f2] leading-tight cursor-pointer">{activeConvoName}</p>
             <p className="text-[11px] text-[#7D98A1] mt-0.5">
-              {activeConvoOnline ? "Active now" : "Offline"}
+              {activeConvoData?.otherUser.online ? "Active now" : formatLastSeen(activeConvoData?.otherUser.lastSeen)}
             </p>
           </div>
         </div>
