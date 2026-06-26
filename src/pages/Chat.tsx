@@ -41,6 +41,11 @@ export default function Chat() {
   const bottomRef = useRef<HTMLDivElement>(null)
   const [profileDetails, setProfileDetails] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [, setTim] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => setTim(t => t + 1), 60000);
+    return () => clearInterval(interval);
+  }, []);
   const [settings, setSettings] = useState<Settings>({
     displayName: "",
     bio: "",
@@ -471,7 +476,7 @@ export default function Chat() {
 
       {activeConvo && <div className="flex-1 flex flex-col bg-[#eef1f2]">
 
-        <div className="w-full bg-[#1C2321] h-[68px] flex items-center px-5 gap-3 shrink-0 z-10
+        <div className="w-full bg-[#1C2321] h-[68px] flex items-center px-5 gap-3 shrink-0
   border-b border-b-[#2e3b38]
   border-l-2 border-l-[#DE6449]">
           <div className="relative">
