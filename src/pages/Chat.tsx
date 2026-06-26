@@ -479,14 +479,12 @@ export default function Chat() {
             </p>
           </div>
         </div>
-
         <div className="flex-1 overflow-y-auto flex flex-col gap-3 px-5 py-4">
           {!activeConvo && (
             <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">
               :messages:
             </div>
           )}
-
           {activeConvo && messages.map(msg => (
             <div
               key={msg.id}
