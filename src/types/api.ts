@@ -113,6 +113,7 @@ export interface OtherUser {
     displayName: string,
     avatarUrl: string,
     bio: string;
+    online?: boolean;
 }
 
 export interface ChatMessage {
@@ -132,6 +133,8 @@ export interface SocketEventData {
     data?: any;
     message?: any;
     conversationId?: number;
+    userId?: number;
+    online?: boolean;
 }
 
 

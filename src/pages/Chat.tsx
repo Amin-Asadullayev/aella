@@ -29,6 +29,7 @@ export default function Chat() {
   const [showSettings, setShowSettings] = useState(false)
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [activeConvo, setActiveConvo] = useState<Conversation | null>(null)
+  const activeConvoRef = useRef<Conversation | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
   const [cryptoReady, setCryptoReady] = useState(false)
@@ -59,6 +60,10 @@ export default function Chat() {
     },
   });
   const [username, setUsername] = useState("");
+
+  useEffect(() => {
+    activeConvoRef.current = activeConvo;
+  }, [activeConvo]);
 
   useEffect(() => {
     console.log("auth state:", { user, token, passphrase })
@@ -271,6 +276,17 @@ export default function Chat() {
         );
         break;
       }
+      case "presence": {
+        const { userId, online } = data;
+        setConversations(prev =>
+          prev.map(c =>
+            c.otherUser.id === userId
+              ? { ...c, otherUser: { ...c.otherUser, online: online ?? false } }
+              : c
+          )
+        );
+        break;
+      }
       default:
         break
     }
@@ -301,7 +317,7 @@ export default function Chat() {
     setMessages([])
     getMessages(activeConvo.conversationId)
     if (settings.privacy.readReceipts) markAsRead(activeConvo.conversationId)
-  }, [activeConvo])
+  }, [activeConvo?.conversationId])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -375,6 +391,9 @@ export default function Chat() {
     ? conversations.find(c => c.conversationId === activeConvo.conversationId)?.otherUser.displayName
     || activeConvo.otherUser.username
     : null
+  let activeConvoOnline = conversations.find(
+    c => c.conversationId === activeConvo?.conversationId
+  )?.otherUser.online ?? false;
 
   return (
 
@@ -449,11 +468,15 @@ export default function Chat() {
                 {initials(activeConvo.otherUser.username || String(activeConvo.otherUser.id))}
               </div>
             }
-            <span className="absolute bottom-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-[#DE6449] border-2 border-[#1C2321]" />
+            {activeConvoOnline && (
+              <span className="absolute bottom-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-[#DE6449] border-2 border-[#1C2321]" />
+            )}
           </div>
           <div className="flex-1">
             <p onClick={() => setProfileDetails(true)} className="text-[15px] font-semibold text-[#e8f0f2] leading-tight cursor-pointer">{activeConvoName}</p>
-            <p className="text-[11px] text-[#7D98A1] mt-0.5">Active now</p>
+            <p className="text-[11px] text-[#7D98A1] mt-0.5">
+              {activeConvoOnline ? "Active now" : "Offline"}
+            </p>
           </div>
         </div>
 
@@ -643,7 +666,8 @@ export default function Chat() {
           username: "",
           displayName: "",
           avatarUrl: "",
-          bio: ""
+          bio: "",
+          online: false,
         }}
       />
     </div>
