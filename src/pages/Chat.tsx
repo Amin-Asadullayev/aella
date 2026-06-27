@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import SettingsModal from '@/components/settingsModal'
 import { getSettings, saveSettings } from '@/lib/settings'
 import type { Settings } from "@/types/api"
+import KeyExportModal from '@/components/keyExportModal'
 import ProfileDetails from '@/components/profileDetails'
 import {
   connect,
@@ -34,6 +35,7 @@ export default function Chat() {
   const [input, setInput] = useState("")
   const [cryptoReady, setCryptoReady] = useState(false)
   const [sending, setSending] = useState(false)
+  const [showKeyExport, setShowKeyExport] = useState(false)
   const isFirstRender = useRef(true);
   const [showNewChat, setShowNewChat] = useState(false);
   const [newChatInput, setNewChatInput] = useState("");
@@ -118,6 +120,9 @@ export default function Chat() {
       } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() == 'k') {
         e.preventDefault()
         setShowSettings(true)
+      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() == 'e') {
+        e.preventDefault()
+        setShowKeyExport(true)
       }
     }
     document.addEventListener('keydown', handleKeyDown);
@@ -685,6 +690,10 @@ export default function Chat() {
           bio: "",
           online: false,
         }}
+      />
+      <KeyExportModal
+        open={showKeyExport}
+        onClose={() => setShowKeyExport(false)}
       />
     </div>
   )
