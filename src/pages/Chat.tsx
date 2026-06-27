@@ -35,12 +35,12 @@ export default function Chat() {
   const [input, setInput] = useState("")
   const [cryptoReady, setCryptoReady] = useState(false)
   const [sending, setSending] = useState(false)
-  const [keyExport, setKeyExport] = useState<KeyExportTabId>(null)
   const isFirstRender = useRef(true);
   const [showNewChat, setShowNewChat] = useState(false);
   const [newChatInput, setNewChatInput] = useState("");
   const [showError, setShowError] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const [tab, setTab] = useState<KeyExportTabId>(null);
   const [profileDetails, setProfileDetails] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState("");
   const [, setTim] = useState(0);
@@ -122,7 +122,10 @@ export default function Chat() {
         setShowSettings(true)
       } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() == 'e') {
         e.preventDefault()
-        setKeyExport("export")
+        setTab("export")
+      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() == 'i') {
+        e.preventDefault()
+        setTab("import")
       }
     }
     document.addEventListener('keydown', handleKeyDown);
@@ -692,8 +695,9 @@ export default function Chat() {
         }}
       />
       <KeyExportModal
-        onClose={() => setKeyExport(null)}
-        tabOpen={keyExport}
+        onClose={() => setTab(null)}
+        tab={tab}
+        setTab={setTab}
       />
     </div>
   )
