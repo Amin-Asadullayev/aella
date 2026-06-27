@@ -83,6 +83,7 @@ export interface FormState {
 
 export type EditField = "avatar" | "displayName" | "username" | "bio" | null;
 export type TabId = "profile" | "privacy" | "chat" | "appearance" | "account";
+export type KeyExportTabId = "export" | "import" | null;
 
 export interface SettingsModalProps {
     open: boolean;

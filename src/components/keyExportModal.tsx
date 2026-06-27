@@ -4,37 +4,35 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark, faDownload } from "@fortawesome/free-solid-svg-icons";
 import { getPrivateKey } from "@/lib/keyStore";
 import { useAuth } from "@/lib/AuthContext";
-
-type TabId = "export" | "import";
+import { KeyExportTabId } from "@/types/api";
 
 export default function KeyExportModal({
-  open,
   onClose,
   tabOpen,
 }: {
-  open: boolean;
   onClose: () => void;
-  tabOpen: TabId;
+  tabOpen: KeyExportTabId;
 }) {
   const { user } = useAuth();
-  const [tab, setTab] = useState<TabId>(tabOpen || "export");
+  const [tab, setTab] = useState<KeyExportTabId>(tabOpen || "export");
   const [privateKey, setPrivateKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const tabs: { id: TabId; label: string }[] = [
+  const tabs: { id: KeyExportTabId; label: string }[] = [
     { id: "export", label: "Export Key" },
   ];
 
   useEffect(() => {
-    if (!open) {
+    if (tabOpen == null) {
       setPrivateKey(null);
       setError(null);
+      setLoading(false);
     }
-  }, [open]);
+  }, [tabOpen]);
 
   useEffect(() => {
-    if (!open || !user) return;
+    if (tabOpen == null || !user) return;
     setLoading(true);
     getPrivateKey(user.id)
       .then(async (key) => {
@@ -46,16 +44,16 @@ export default function KeyExportModal({
       })
       .catch(() => setError("Failed to load private key."))
       .finally(() => setLoading(false));
-  }, [open, user]);
+  }, [tabOpen, user]);
 
   useEffect(() => {
-    if (!open) return;
+    if (tabOpen == null) return;
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, onClose]);
+  }, [tabOpen, onClose]);
 
   function handleDownload() {
     if (!privateKey) return;
@@ -70,7 +68,7 @@ export default function KeyExportModal({
 
   return (
     <AnimatePresence>
-      {open && (
+      {tabOpen != null && (
         <motion.div
           className="fixed inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm z-50"
           initial={{ opacity: 0 }}

@@ -23,7 +23,7 @@ import {
   handleIncomingMessage,
   getConversation
 } from '@/lib/socketClient'
-import { Conversation, ChatMessage, SocketEventData } from '@/types/api'
+import { Conversation, ChatMessage, SocketEventData, KeyExportTabId } from '@/types/api'
 
 export default function Chat() {
   const { user, token, passphrase } = useAuth()
@@ -35,7 +35,7 @@ export default function Chat() {
   const [input, setInput] = useState("")
   const [cryptoReady, setCryptoReady] = useState(false)
   const [sending, setSending] = useState(false)
-  const [showKeyExport, setShowKeyExport] = useState(false)
+  const [keyExport, setKeyExport] = useState<KeyExportTabId>(null)
   const isFirstRender = useRef(true);
   const [showNewChat, setShowNewChat] = useState(false);
   const [newChatInput, setNewChatInput] = useState("");
@@ -122,7 +122,7 @@ export default function Chat() {
         setShowSettings(true)
       } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() == 'e') {
         e.preventDefault()
-        setShowKeyExport(true)
+        setKeyExport("export")
       }
     }
     document.addEventListener('keydown', handleKeyDown);
@@ -692,8 +692,8 @@ export default function Chat() {
         }}
       />
       <KeyExportModal
-        open={showKeyExport}
-        onClose={() => setShowKeyExport(false)}
+        onClose={() => setKeyExport(null)}
+        tabOpen={keyExport}
       />
     </div>
   )
