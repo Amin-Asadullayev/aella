@@ -1,25 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faXmark, faDownload } from "@fortawesome/free-solid-svg-icons";
 import { getPrivateKey } from "@/lib/keyStore";
 import { useAuth } from "@/lib/AuthContext";
-import QRCode from "qrcode";
 
-type TabId = "export";
+type TabId = "export" | "import";
 
 export default function KeyExportModal({
   open,
   onClose,
+  tabOpen,
 }: {
   open: boolean;
   onClose: () => void;
+  tabOpen: TabId;
 }) {
   const { user } = useAuth();
-  const [tab, setTab] = useState<TabId>("export");
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [tab, setTab] = useState<TabId>(tabOpen || "export");
   const [privateKey, setPrivateKey] = useState<string | null>(null);
-  const [revealed, setRevealed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,9 +28,7 @@ export default function KeyExportModal({
 
   useEffect(() => {
     if (!open) {
-      setQrDataUrl(null);
       setPrivateKey(null);
-      setRevealed(false);
       setError(null);
     }
   }, [open]);
@@ -46,13 +43,6 @@ export default function KeyExportModal({
           return;
         }
         setPrivateKey(key);
-        const url = await QRCode.toDataURL(key, {
-          errorCorrectionLevel: "L",
-          margin: 1,
-          width: 220,
-          color: { dark: "#1C2321", light: "#ffffff" },
-        });
-        setQrDataUrl(url);
       })
       .catch(() => setError("Failed to load private key."))
       .finally(() => setLoading(false));
@@ -73,7 +63,7 @@ export default function KeyExportModal({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "aella-private-key.txt";
+    a.download = "aellaPrivate.key";
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -146,27 +136,19 @@ export default function KeyExportModal({
                     )}
 
                     {!loading && !error && (
-                      <div className="flex gap-6 flex-1">
-                        <div className="flex flex-col items-center justify-center gap-3 w-full">
-                          <div className="relative">
-                            <div className={`transition-all duration-300 ${!revealed ? "blur-md" : ""}`}>
-                              {qrDataUrl && (
-                                <img src={qrDataUrl} className="w-64 h-64 border border-c1/10" />
-                              )}
-                            </div>
-                            {!revealed && (
-                              <button
-                                onClick={() => setRevealed(true)}
-                                className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-c1"
-                              >
-                                <span className="text-md font-semibold">Tap to reveal</span>
-                              </button>
-                            )}
-                          </div>
-                          <p className="text-[14px] text-c1/40 text-center">
-                            Scan with your other device to import
-                          </p>
-                        </div>
+                      <div className="flex flex-col flex-1 justify-center gap-4">
+                        <button
+                          onClick={handleDownload}
+                          className="group flex flex-col flex-1 items-center gap-2 justify-center w-full px-5 py-4 rounded-xl
+        bg-c1/5 hover:bg-c1/10 border border-c1/10 hover:border-c1/20
+        transition-all duration-200"
+                        >
+                          <FontAwesomeIcon icon={faDownload} className="text-c1/60 text-4xl" />
+                          <span className="text-lg font-semibold text-c1">Download your private key</span>
+                        </button>
+                        <p className="text-xs text-c1/70 leading-relaxed">
+                          Be careful with your private key. Keep it a secret and never share it with a third person.
+                        </p>
                       </div>
                     )}
                   </motion.div>
@@ -179,10 +161,3 @@ export default function KeyExportModal({
     </AnimatePresence>
   );
 }
-
-
-
-
-
-
-
