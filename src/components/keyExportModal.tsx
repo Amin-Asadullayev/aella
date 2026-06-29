@@ -31,8 +31,8 @@ export default function KeyExportModal({
       setPrivateKey(null);
       setError(null);
       setLoading(false);
-      setImported(false); // ADD
-    }
+      setImported(false);
+    } else if (tab == "import" && error == "No private key found on this device.") setError(null)
   }, [tab]);
 
   useEffect(() => {
@@ -40,10 +40,12 @@ export default function KeyExportModal({
     setLoading(true);
     getPrivateKey(user.id)
       .then(async (key) => {
-        if (!key) {
+        if (!key && tab == "export") {
           setError("No private key found on this device.");
+          console.log("78")
           return;
         }
+        
         setPrivateKey(key);
       })
       .catch(() => setError("Failed to load private key."))
@@ -197,8 +199,8 @@ export default function KeyExportModal({
                           <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
                             <FontAwesomeIcon icon={faCheck} className="text-c2 text-2xl" />
                           </div>
-                          <p className="text-base font-semibold text-c1">Key imported successfully</p>
-                          <p className="text-xs text-c1/50 text-center max-w-[260px]">
+                          <p className="font-semibold text-c1 text-md">Key imported successfully</p>
+                          <p className="text-sm text-c1/80 text-center max-w-[260px]">
                             Your new private key is saved on this device. You may need to re-login for it to take effect.
                           </p>
                           <button
