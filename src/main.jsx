@@ -8,6 +8,7 @@ import { AuthProvider } from "./lib/AuthContext";
 ReactDOM.createRoot(document.getElementById("root")).render(
   <AuthProvider>
     <BrowserRouter>
+    <link rel="icon" type="image/png" href="/logo.ico" />
       <App />
     </BrowserRouter>
   </AuthProvider>
